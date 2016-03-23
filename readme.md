@@ -4,6 +4,9 @@ Python/Qt program to view a data cube by slicing it up.
 
 Currently only supports fortran unformatted binary files
 
+![Screenshot]
+(https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
+
 ####ToDo
 
   - Ability to open any fortran unformmated binary file
@@ -12,5 +15,4 @@ Currently only supports fortran unformatted binary files
   - non-square data cubes
   - more...
 
-![Screenshot]
-(https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
+
