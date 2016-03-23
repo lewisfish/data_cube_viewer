@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Wed Mar 23 14:11:02 2016
+# Created: Wed Mar 23 16:24:50 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -36,19 +36,27 @@ class Ui_MainWindow(object):
         self.mplvl.setContentsMargins(0, 0, 0, 0)
         self.mplvl.setObjectName("mplvl")
         self.horizontalLayout.addWidget(self.mplwindow)
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setContentsMargins(-1, -1, 10, 200)
-        self.verticalLayout.setObjectName("verticalLayout")
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setContentsMargins(-1, -1, 10, 200)
+        self.gridLayout.setObjectName("gridLayout")
         self.XView = QtWidgets.QRadioButton(self.centralWidget)
         self.XView.setObjectName("XView")
-        self.verticalLayout.addWidget(self.XView)
-        self.YView = QtWidgets.QRadioButton(self.centralWidget)
-        self.YView.setObjectName("YView")
-        self.verticalLayout.addWidget(self.YView)
+        self.gridLayout.addWidget(self.XView, 0, 0, 1, 2)
         self.ZView = QtWidgets.QRadioButton(self.centralWidget)
         self.ZView.setObjectName("ZView")
-        self.verticalLayout.addWidget(self.ZView)
-        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.gridLayout.addWidget(self.ZView, 2, 0, 1, 2)
+        self.YView = QtWidgets.QRadioButton(self.centralWidget)
+        self.YView.setObjectName("YView")
+        self.gridLayout.addWidget(self.YView, 1, 0, 1, 2)
+        self.Bore = QtWidgets.QToolButton(self.centralWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.Bore.sizePolicy().hasHeightForWidth())
+        self.Bore.setSizePolicy(sizePolicy)
+        self.Bore.setObjectName("Bore")
+        self.gridLayout.addWidget(self.Bore, 3, 0, 1, 2)
+        self.horizontalLayout.addLayout(self.gridLayout)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 639, 25))
@@ -56,9 +64,6 @@ class Ui_MainWindow(object):
         self.menu_Menu = QtWidgets.QMenu(self.menuBar)
         self.menu_Menu.setObjectName("menu_Menu")
         MainWindow.setMenuBar(self.menuBar)
-        self.mainToolBar = QtWidgets.QToolBar(MainWindow)
-        self.mainToolBar.setObjectName("mainToolBar")
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
         self.statusBar.setObjectName("statusBar")
         MainWindow.setStatusBar(self.statusBar)
@@ -74,8 +79,9 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Data Cube Viewer"))
         self.XView.setText(_translate("MainWindow", "X View"))
-        self.YView.setText(_translate("MainWindow", "Y View"))
         self.ZView.setText(_translate("MainWindow", "Z View"))
+        self.YView.setText(_translate("MainWindow", "Y View"))
+        self.Bore.setText(_translate("MainWindow", "Draw Bore "))
         self.menu_Menu.setTitle(_translate("MainWindow", "&Menu"))
         self.Open.setText(_translate("MainWindow", "&Open"))
         self.Open.setToolTip(_translate("MainWindow", "Open a file"))

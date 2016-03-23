@@ -38,35 +38,47 @@
        </sizepolicy>
       </property>
       <layout class="QVBoxLayout" name="mplvl"/>
-      <zorder>mplfigs</zorder>
      </widget>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QGridLayout" name="gridLayout">
       <property name="rightMargin">
        <number>10</number>
       </property>
       <property name="bottomMargin">
        <number>200</number>
       </property>
-      <item>
+      <item row="0" column="0" colspan="2">
        <widget class="QRadioButton" name="XView">
         <property name="text">
          <string>X View</string>
         </property>
        </widget>
       </item>
-      <item>
+      <item row="2" column="0" colspan="2">
+       <widget class="QRadioButton" name="ZView">
+        <property name="text">
+         <string>Z View</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
        <widget class="QRadioButton" name="YView">
         <property name="text">
          <string>Y View</string>
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QRadioButton" name="ZView">
+      <item row="3" column="0" colspan="2">
+       <widget class="QToolButton" name="Bore">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Z View</string>
+         <string>Draw Bore </string>
         </property>
        </widget>
       </item>
@@ -90,14 +102,6 @@
     <addaction name="Open"/>
    </widget>
    <addaction name="menu_Menu"/>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="Open">
