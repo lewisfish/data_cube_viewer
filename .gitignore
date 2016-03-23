@@ -1,4 +1,6 @@
-*.ccp
+*.cpp
 *.dat
 *.pro
 *.h
+*.pro.user
+*.pro.user.*
