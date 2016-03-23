@@ -15,6 +15,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Open.triggered.connect(self.file_open)
         self.XView.setChecked(True)
         
+        self.XView.toggled.connect(lambda:self.btnstate(self.XView))
+        self.YView.toggled.connect(lambda:self.btnstate(self.YView))
+        self.ZView.toggled.connect(lambda:self.btnstate(self.ZView))
+                
         self.X = X
         rows, cols, self.slices = X.shape
         self.ind = self.slices / 2
@@ -24,7 +28,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Scroll.setValue(self.ind)
         self.Scroll.sliderMoved.connect(self.sliderval)
         
-#        self.YView.
     
     def sliderval(self):
         self.im.set_data(self.X[self.Scroll.value(), :, :])
@@ -38,6 +41,28 @@ class Main(QMainWindow, Ui_MainWindow):
     def file_open(self):
         name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
         fd = open(name , 'rb')
+        
+        
+    def btnstate(self,b):
+        if b.text()[0] == "X":
+         if b.isChecked() == True:
+            print b.text()+" is selected"
+         else:
+            print b.text()+" is deselected"
+	
+        if b.text()[0] == "Y":
+         if b.isChecked() == True:
+            print b.text()+" is selected"
+            self.im = ax.imshow(self.X[:, self.ind, :], cmap='cubehelix', interpolation='nearest')
+         else:
+            print b.text()+" is deselected"
+            
+        if b.text()[0] == "Z":
+         if b.isChecked() == True:
+            print b.text()+" is selected"
+            self.im = ax.imshow(self.X[:, :, self.ind], cmap='cubehelix', interpolation='nearest')
+         else:
+            print b.text()+" is deselected"
 
 def readslice(inputfilename, ndim):
     shape = (ndim, ndim, ndim, 4)
