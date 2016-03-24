@@ -4,7 +4,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
-import gc
 
 Ui_MainWindow, QMainWindow = loadUiType('mainwindow.ui')
 
@@ -138,7 +137,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if dim == 4:
             data = data[:, :, :, 0]
         data = data[:, :, :]
-        gc.collect()
+        
         return data
 
     def showNdimDialog(self, ):
@@ -165,8 +164,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     fig = Figure()
     ax = fig.add_subplot(111)
-    
-    gc.enable()
+
     app = QtGui.QApplication(sys.argv)
     main = Main()
     main.show()
