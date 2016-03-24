@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+import gc
 
 Ui_MainWindow, QMainWindow = loadUiType('mainwindow.ui')
 
@@ -53,28 +54,42 @@ class Main(QMainWindow, Ui_MainWindow):
         self.mplvl.removeWidget(self.toolbar)
         self.toolbar.close()
         self.im.autoscale()
-
+        
     def file_open(self):
         try:
             self.fig.delaxes(self.fig.axes[1])
             self.figure.subplots_adjust(right=0.90)
         except IndexError:
             pass
+        except AttributeError:
+            pass
         if self.X.size != 0:
             self.rmmpl()
         name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
         ndim = self.showNdimDialog()
-        dt = self.showDtDialog()
+        item = str(self.showDtDialog())
+
+        if "Real*8" in item:
+            dt = np.float64
+        elif "Real*4" in item:
+            dt = np.float32
+        
+        if "4 dim" in item:
+            dim = 4
+        elif "3 dim" in item:
+            dim = 3
+        
         try:
             fd = open(name, 'rb')
         except IOError:
             pass
         try:
-            self.X = self.readslice(fd, int(ndim), dt)
+            self.X = self.readslice(fd, int(ndim), dt, dim)
             self.init_plot()
         except ValueError:
             self.ErrorDialog("Value of Ndim incorrect for this data cube.")
-
+            self.rmmpl()
+    
     def btnstate(self, b):
         if b.text()[0] == "X":
             if b.isChecked() is True:
@@ -108,17 +123,22 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Scroll.setMaximum(self.slices)
         self.Scroll.setValue(self.ind)
 
-    def readslice(self, fd, ndim, dt):
-        if dt == np.float64:
-            dim = 16
-        elif dt == np.float32:
-            dim = 4
-        shape = (ndim, ndim, ndim, dim)
+    def readslice(self, fd, ndim, dt, dim):
+        if dim == 4:
+            if dt == np.float64:
+                magic = 16
+            elif dt == np.float32:
+                magic = 4
+            shape = (ndim, ndim, ndim, magic)
+        elif dim == 3:
+            shape = (ndim, ndim, ndim)
         data = np.fromfile(
             file=fd, dtype=dt, sep="").reshape(shape, order='F')
         fd.close()
-        data = data[:, :, :, 0]
+        if dim == 4:
+            data = data[:, :, :, 0]
         data = data[:, :, :]
+        gc.collect()
         return data
 
     def showNdimDialog(self, ):
@@ -127,16 +147,12 @@ class Main(QMainWindow, Ui_MainWindow):
             return text
 
     def showDtDialog(self, ):
-        items = ("Real*4", "Real*8")
+        items = ("4 dim Real*4", "4 dim Real*8", "3 dim Real*4", "3 dim Real*8")
 
         item, ok = QtGui.QInputDialog.getItem(self, "Select Fortran Precision",
                                               "Precisions", items, 0, False)
 
-        if ok and item:
-            if item == "Real*8":
-                item = np.float64
-            elif item == "Real*4":
-                item = np.float32
+        if ok and item:                     
             return item
 
     def ErrorDialog(self, ErrMsg):
@@ -149,7 +165,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     fig = Figure()
     ax = fig.add_subplot(111)
-
+    
+    gc.enable()
     app = QtGui.QApplication(sys.argv)
     main = Main()
     main.show()
