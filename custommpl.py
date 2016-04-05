@@ -1,9 +1,12 @@
+#!/usr/bin/python
 from PyQt4.uic import loadUiType
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+
+import gc
 
 Ui_MainWindow, QMainWindow = loadUiType('mainwindow.ui')
 
@@ -13,7 +16,8 @@ class Main(QMainWindow, Ui_MainWindow):
     def __init__(self, ):
         super(Main, self).__init__()
         self.setupUi(self)
-
+        self.flag = 0
+                
         self.XView.setChecked(True)
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
@@ -39,8 +43,10 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
         self.im.axes.figure.canvas.draw()
-
+        self.im.autoscale()
+    
     def addmpl(self):
+        self.flag = 1
         self.canvas = FigureCanvas(self.fig)
         self.mplvl.addWidget(self.canvas)
         self.canvas.draw()
@@ -55,6 +61,16 @@ class Main(QMainWindow, Ui_MainWindow):
         self.im.autoscale()
         
     def file_open(self):
+
+#        h = hpy()
+#        print h.heap()
+        if self.flag == 1:
+            self.rmmpl()
+        self.fig.clf()
+#        self.fig.delaxes()
+        self.ax1.clear()
+        self.fig = Figure()
+        self.ax1 = self.fig.add_subplot(111)
         try:
             self.fig.delaxes(self.fig.axes[1])
             self.figure.subplots_adjust(right=0.90)
@@ -62,8 +78,6 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
         except AttributeError:
             pass
-        if self.X.size != 0:
-            self.rmmpl()
         name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
         ndim = self.showNdimDialog()
         item = str(self.showDtDialog())
@@ -83,31 +97,32 @@ class Main(QMainWindow, Ui_MainWindow):
         except IOError:
             pass
         try:
-            self.X = self.readslice(fd, int(ndim), dt, dim)
+            #del self.X
+            self.readslice(fd, int(ndim), dt, dim)
             self.init_plot()
         except ValueError:
             self.ErrorDialog("Value of Ndim incorrect for this data cube.")
-            self.rmmpl()
+            #self.rmmpl()
     
     def btnstate(self, b):
         if b.text()[0] == "X":
             if b.isChecked() is True:
                 self.rmmpl()
-                self.im = self.ax1.imshow(self.X[self.ind, :, :],
+                self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                           cmap='cubehelix', interpolation='nearest')
                 self.addmpl()
 
         if b.text()[0] == "Y":
             if b.isChecked() is True:
                 self.rmmpl()
-                self.im = self.ax1.imshow(
+                self.im = self.ax1.matshow(
                     self.X[:, self.ind, :], cmap='cubehelix', interpolation='nearest')
                 self.addmpl()
 
         if b.text()[0] == "Z":
             if b.isChecked() is True:
                 self.rmmpl()
-                self.im = self.ax1.imshow(
+                self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap='cubehelix', interpolation='nearest')
                 self.addmpl()
 
@@ -116,7 +131,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.addmpl()
         rows, cols, self.slices = self.X.shape
         self.ind = self.slices / 2
-        self.im = self.ax1.imshow(self.X[self.ind, :, :],
+        self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                   cmap='cubehelix', interpolation='nearest')
         self.fig.colorbar(self.im)
         self.Scroll.setMaximum(self.slices)
@@ -136,9 +151,8 @@ class Main(QMainWindow, Ui_MainWindow):
         fd.close()
         if dim == 4:
             data = data[:, :, :, 0]
-        data = data[:, :, :]
-        
-        return data
+        self.X = data[:, :, :]
+        del data
 
     def showNdimDialog(self, ):
         text, ok = QtGui.QInputDialog.getInt(self, 'Input Ndim', 'Enter Ndim:')
@@ -159,9 +173,10 @@ class Main(QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     import sys
+#    from guppy import hpy
     from PyQt4 import QtGui
     import numpy as np
-    import matplotlib.pyplot as plt
+#    import matplotlib.pyplot as plt
     fig = Figure()
     ax = fig.add_subplot(111)
 
