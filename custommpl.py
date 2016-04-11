@@ -43,7 +43,7 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
         self.im.axes.figure.canvas.draw()
-        self.im.autoscale()
+        #self.im.autoscale()
     
     def addmpl(self):
         self.flag = 1
@@ -58,16 +58,12 @@ class Main(QMainWindow, Ui_MainWindow):
         self.canvas.close()
         self.mplvl.removeWidget(self.toolbar)
         self.toolbar.close()
-        self.im.autoscale()
+        #self.im.autoscale()
         
     def file_open(self):
-
-#        h = hpy()
-#        print h.heap()
         if self.flag == 1:
             self.rmmpl()
         self.fig.clf()
-#        self.fig.delaxes()
         self.ax1.clear()
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
@@ -147,7 +143,9 @@ class Main(QMainWindow, Ui_MainWindow):
         elif dim == 3:
             shape = (ndim, ndim, ndim)
         data = np.fromfile(
-            file=fd, dtype=dt, sep="").reshape(shape, order='F')
+            file=fd, dtype=dt, sep="")
+        print len(data)
+        data = data.reshape(shape, order='F')
         fd.close()
         if dim == 4:
             data = data[:, :, :, 0]
@@ -173,10 +171,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
 if __name__ == '__main__':
     import sys
-#    from guppy import hpy
     from PyQt4 import QtGui
     import numpy as np
-#    import matplotlib.pyplot as plt
+
     fig = Figure()
     ax = fig.add_subplot(111)
 

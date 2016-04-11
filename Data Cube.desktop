@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Comment=Launches Data Cube viewer
+Exec=gnome-terminal -e /home/lewis/data_cube/custommpl.py
+Icon=/usr/share/icons/callum.png
+Terminal=false
+Type=Application
+Categories=Utility;Application;
+Name[en_GB]=Data Cube Viewer
