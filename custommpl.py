@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qt4agg import (
 
 import gc
 
-Ui_MainWindow, QMainWindow = loadUiType('mainwindow.ui')
+Ui_MainWindow, QMainWindow = loadUiType('/home/lewis/data_cube/mainwindow.ui')
 
 
 class Main(QMainWindow, Ui_MainWindow):
@@ -22,14 +22,16 @@ class Main(QMainWindow, Ui_MainWindow):
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
         self.X = np.array([])
-
-        self.Open.triggered.connect(self.file_open)
-
+   
         self.XView.toggled.connect(lambda: self.btnstate(self.XView))
         self.YView.toggled.connect(lambda: self.btnstate(self.YView))
         self.ZView.toggled.connect(lambda: self.btnstate(self.ZView))
 
         self.Scroll.sliderMoved.connect(self.sliderval)
+
+        if len(sys.argv) >= 2:
+            self.file_open(sys.argv[1:4])
+        self.Open.triggered.connect(self.file_open)
 
     def sliderval(self):
         try:
@@ -60,7 +62,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.toolbar.close()
         #self.im.autoscale()
         
-    def file_open(self):
+    def file_open(self, *args):
         if self.flag == 1:
             self.rmmpl()
         self.fig.clf()
@@ -74,9 +76,24 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
         except AttributeError:
             pass
-        name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
-        ndim = self.showNdimDialog()
-        item = str(self.showDtDialog())
+        if args[0]:
+            name = args[0][0]
+            ndim = args[0][1]
+            item = args[0][2]
+
+            if int(item) == 1:
+                item = str("4 dim Real*4")
+            elif int(item) == 2:
+                item = str("4 dim Real*8")
+            elif int(item) == 3:
+                item = "3 dim Real*4"
+            elif int(item) == 4:
+                item = "3 dim Real*8"
+            args = None
+        else:
+            name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
+            ndim = self.showNdimDialog()
+            item = str(self.showDtDialog())
 
         if "Real*8" in item:
             dt = np.float64
@@ -144,7 +161,7 @@ class Main(QMainWindow, Ui_MainWindow):
             shape = (ndim, ndim, ndim)
         data = np.fromfile(
             file=fd, dtype=dt, sep="")
-        print len(data)
+#        print len(data)
         data = data.reshape(shape, order='F')
         fd.close()
         if dim == 4:
@@ -173,7 +190,15 @@ if __name__ == '__main__':
     import sys
     from PyQt4 import QtGui
     import numpy as np
-
+    
+    if len(sys.argv) < 4:
+        print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
+        
+        print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
+        print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
+        print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+        sys.exit(0)
+        
     fig = Figure()
     ax = fig.add_subplot(111)
 
