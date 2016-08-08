@@ -17,15 +17,16 @@ class Main(QMainWindow, Ui_MainWindow):
         super(Main, self).__init__()
         self.setupUi(self)
         self.flag = 0
-                
+
         self.XView.setChecked(True)
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
         self.X = np.array([])
-   
+
         self.XView.toggled.connect(lambda: self.btnstate(self.XView))
         self.YView.toggled.connect(lambda: self.btnstate(self.YView))
         self.ZView.toggled.connect(lambda: self.btnstate(self.ZView))
+        self.Bore.toggled.connect(lambda : self.btnstate(self.Bore))
 
         self.Scroll.sliderMoved.connect(self.sliderval)
 
@@ -41,12 +42,14 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im.set_data(self.X[:, self.Scroll.value(), :])
             elif self.ZView.isChecked():
                 self.im.set_data(self.X[:, :, self.Scroll.value()])
+            elif self.Bore.isChecked():
+                self.im.set_ydata(self.X[self.Scroll.value(), 100, :])
         except IndexError:
             pass
 
         self.im.axes.figure.canvas.draw()
-        #self.im.autoscale()
-    
+        # self.im.autoscale()
+
     def addmpl(self):
         self.flag = 1
         self.canvas = FigureCanvas(self.fig)
@@ -60,8 +63,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.canvas.close()
         self.mplvl.removeWidget(self.toolbar)
         self.toolbar.close()
-        #self.im.autoscale()
-        
+        # self.im.autoscale()
+
     def file_open(self, *args):
         if self.flag == 1:
             self.rmmpl()
@@ -77,18 +80,27 @@ class Main(QMainWindow, Ui_MainWindow):
         except AttributeError:
             pass
         if args[0]:
-            name = args[0][0]
-            ndim = args[0][1]
-            item = args[0][2]
+            args = args[0]
+            name = args[0]
+            if len(args) == 2:
+                ndim = args[1]
+                item = str(self.showDtDialog())
 
-            if int(item) == 1:
-                item = str("4 dim Real*4")
-            elif int(item) == 2:
-                item = str("4 dim Real*8")
-            elif int(item) == 3:
-                item = "3 dim Real*4"
-            elif int(item) == 4:
-                item = "3 dim Real*8"
+            elif len(args) == 3:
+                ndim = args[1]
+                item = args[2]
+
+                if int(item) == 1:
+                    item = str("4 dim Real*4")
+                elif int(item) == 2:
+                    item = str("4 dim Real*8")
+                elif int(item) == 3:
+                    item = "3 dim Real*4"
+                elif int(item) == 4:
+                    item = "3 dim Real*8"
+            else:
+                ndim = self.showNdimDialog()
+                item = str(self.showDtDialog())
             args = None
         else:
             name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
@@ -99,12 +111,12 @@ class Main(QMainWindow, Ui_MainWindow):
             dt = np.float64
         elif "Real*4" in item:
             dt = np.float32
-        
+
         if "4 dim" in item:
             dim = 4
         elif "3 dim" in item:
             dim = 3
-        
+
         try:
             fd = open(name, 'rb')
         except IOError:
@@ -115,18 +127,21 @@ class Main(QMainWindow, Ui_MainWindow):
             self.init_plot()
         except ValueError:
             self.ErrorDialog("Value of Ndim incorrect for this data cube.")
-            #self.rmmpl()
-    
+            # self.rmmpl()
+
     def btnstate(self, b):
+
         if b.text()[0] == "X":
             if b.isChecked() is True:
+                self.ax1.clear()
                 self.rmmpl()
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                          cmap='cubehelix', interpolation='nearest')
+                                           cmap='cubehelix', interpolation='nearest')
                 self.addmpl()
 
         if b.text()[0] == "Y":
             if b.isChecked() is True:
+                self.ax1.clear()
                 self.rmmpl()
                 self.im = self.ax1.matshow(
                     self.X[:, self.ind, :], cmap='cubehelix', interpolation='nearest')
@@ -134,9 +149,27 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text()[0] == "Z":
             if b.isChecked() is True:
+                self.ax1.clear()
                 self.rmmpl()
                 self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap='cubehelix', interpolation='nearest')
+                self.addmpl()
+                
+        if b.text()[0] == "D":
+            if b.isChecked() is True:
+                self.fig.clf()
+                self.ax1.clear()
+                self.fig = Figure()
+                self.ax1 = self.fig.add_subplot(111)
+                try:
+                    self.fig.delaxes(self.fig.axes[1])
+                    self.figure.subplots_adjust(right=0.90)
+                except IndexError:
+                    pass
+                except AttributeError:
+                    pass
+                self.rmmpl()
+                self.im, = self.ax1.plot(self.X[self.ind, 100, :])
                 self.addmpl()
 
     def init_plot(self, ):
@@ -145,7 +178,7 @@ class Main(QMainWindow, Ui_MainWindow):
         rows, cols, self.slices = self.X.shape
         self.ind = self.slices / 2
         self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                  cmap='cubehelix', interpolation='nearest')
+                                   cmap='cubehelix', interpolation='nearest')
         self.fig.colorbar(self.im)
         self.Scroll.setMaximum(self.slices)
         self.Scroll.setValue(self.ind)
@@ -175,12 +208,13 @@ class Main(QMainWindow, Ui_MainWindow):
             return text
 
     def showDtDialog(self, ):
-        items = ("4 dim Real*4", "4 dim Real*8", "3 dim Real*4", "3 dim Real*8")
+        items = ("4 dim Real*4", "4 dim Real*8",
+                 "3 dim Real*4", "3 dim Real*8")
 
         item, ok = QtGui.QInputDialog.getItem(self, "Select Fortran Precision",
                                               "Precisions", items, 0, False)
 
-        if ok and item:                     
+        if ok and item:
             return item
 
     def ErrorDialog(self, ErrMsg):
@@ -190,15 +224,15 @@ if __name__ == '__main__':
     import sys
     from PyQt4 import QtGui
     import numpy as np
-    
-    if len(sys.argv) < 4:
+
+    if len(sys.argv) < 3 and len(sys.argv) > 2:
         print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
-        
+
         print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
         print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
         print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
         sys.exit(0)
-        
+
     fig = Figure()
     ax = fig.add_subplot(111)
 

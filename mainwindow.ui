@@ -70,7 +70,7 @@
        </widget>
       </item>
       <item row="3" column="0" colspan="2">
-       <widget class="QToolButton" name="Bore">
+       <widget class="QRadioButton" name="Bore">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
