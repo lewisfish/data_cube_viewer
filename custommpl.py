@@ -6,8 +6,6 @@ from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 
-import gc
-
 Ui_MainWindow, QMainWindow = loadUiType('/home/lewis/data_cube/mainwindow.ui')
 
 
@@ -17,6 +15,7 @@ class Main(QMainWindow, Ui_MainWindow):
         super(Main, self).__init__()
         self.setupUi(self)
         self.flag = 0
+        self.ave = np.array([])
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -26,29 +25,40 @@ class Main(QMainWindow, Ui_MainWindow):
         self.XView.toggled.connect(lambda: self.btnstate(self.XView))
         self.YView.toggled.connect(lambda: self.btnstate(self.YView))
         self.ZView.toggled.connect(lambda: self.btnstate(self.ZView))
-        self.Bore.toggled.connect(lambda : self.btnstate(self.Bore))
+        self.Bore.toggled.connect(lambda: self.btnstate(self.Bore))
+        self.AverageBore.toggled.connect(
+            lambda: self.btnstate(self.AverageBore))
 
-        self.Scroll.sliderMoved.connect(self.sliderval)
+        self.Scroll_Horz.sliderMoved.connect(self.sliderval)
+        self.Scroll_Vert.sliderMoved.connect(self.sliderval)
 
         if len(sys.argv) >= 2:
             self.file_open(sys.argv[1:4])
         self.Open.triggered.connect(self.file_open)
+        self.Reset.triggered.connect(self.reset_plot)
 
     def sliderval(self):
         try:
             if self.XView.isChecked():
-                self.im.set_data(self.X[self.Scroll.value(), :, :])
+                self.im.set_data(self.X[self.Scroll_Horz.value(), :, :])
             elif self.YView.isChecked():
-                self.im.set_data(self.X[:, self.Scroll.value(), :])
+                self.im.set_data(self.X[:, self.Scroll_Horz.value(), :])
             elif self.ZView.isChecked():
-                self.im.set_data(self.X[:, :, self.Scroll.value()])
+                self.im.set_data(self.X[:, :, self.Scroll_Horz.value()])
             elif self.Bore.isChecked():
-                self.im.set_ydata(self.X[self.Scroll.value(), 100, :])
+                self.im.set_ydata(
+                    self.X[self.Scroll_Horz.value(), self.Scroll_Vert.value(), :][::-1])
+            elif self.AverageBore.isChecked():
+                self.Scroll_Horz.setValue(self.ind)
+                self.Scroll_Vert.setValue(self.ind)
         except IndexError:
             pass
-
-        self.im.axes.figure.canvas.draw()
-        # self.im.autoscale()
+        
+        try:
+            self.im.axes.figure.canvas.draw()
+            # self.im.autoscale()
+        except AttributeError:
+            pass
 
     def addmpl(self):
         self.flag = 1
@@ -67,17 +77,10 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def file_open(self, *args):
         if self.flag == 1:
-            self.rmmpl()
-        self.fig.clf()
-        self.ax1.clear()
-        self.fig = Figure()
-        self.ax1 = self.fig.add_subplot(111)
+            self.reset_plot()
         try:
-            self.fig.delaxes(self.fig.axes[1])
-            self.figure.subplots_adjust(right=0.90)
-        except IndexError:
-            pass
-        except AttributeError:
+            self.reset_plot()
+        except:
             pass
         if args[0]:
             args = args[0]
@@ -131,46 +134,62 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def btnstate(self, b):
 
-        if b.text()[0] == "X":
+        if b.text() == "X View":
             if b.isChecked() is True:
-                self.ax1.clear()
-                self.rmmpl()
+                self.reset_plot()
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            cmap='cubehelix', interpolation='nearest')
+                self.fig.colorbar(self.im) 
                 self.addmpl()
 
-        if b.text()[0] == "Y":
+        if b.text() == "Y View":
             if b.isChecked() is True:
-                self.ax1.clear()
-                self.rmmpl()
+                self.reset_plot()
                 self.im = self.ax1.matshow(
                     self.X[:, self.ind, :], cmap='cubehelix', interpolation='nearest')
+                self.fig.colorbar(self.im)
                 self.addmpl()
 
-        if b.text()[0] == "Z":
+        if b.text() == "Z View":
             if b.isChecked() is True:
-                self.ax1.clear()
-                self.rmmpl()
+                self.reset_plot()
                 self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap='cubehelix', interpolation='nearest')
+                self.fig.colorbar(self.im)
                 self.addmpl()
-                
-        if b.text()[0] == "D":
+
+        if b.text() == "Draw Bore":
             if b.isChecked() is True:
-                self.fig.clf()
-                self.ax1.clear()
-                self.fig = Figure()
-                self.ax1 = self.fig.add_subplot(111)
-                try:
-                    self.fig.delaxes(self.fig.axes[1])
-                    self.figure.subplots_adjust(right=0.90)
-                except IndexError:
-                    pass
-                except AttributeError:
-                    pass
-                self.rmmpl()
-                self.im, = self.ax1.plot(self.X[self.ind, 100, :])
+                self.reset_plot()
+                self.im, = self.ax1.plot(self.X[self.ind, self.ind, :][::-1])
                 self.addmpl()
+
+        if b.text() == "Avg. Bore":
+            if b.isChecked() is True:
+                self.reset_plot()
+
+                if len(self.ave) == 0:
+                    self.ave = np.array([])
+                    self.ave = np.sum(self.X, (0, 1))
+                    self.ave /= (len(self.X[0]) * len(self.X[1]))
+
+                self.im = self.ax1.plot(self.ave[::-1])
+                self.addmpl()
+
+    def reset_plot(self, ):
+        self.ave = np.array([])
+        self.fig.clf()
+        self.ax1.clear()
+        self.fig = Figure()
+        self.ax1 = self.fig.add_subplot(111)
+        try:
+            self.fig.delaxes(self.fig.axes[1])
+            self.figure.subplot_adjust(right=0.90)
+        except IndexError:
+            pass
+        except AttributeError:
+            pass
+        self.rmmpl()
 
     def init_plot(self, ):
         self.XView.setChecked(True)
@@ -180,8 +199,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                    cmap='cubehelix', interpolation='nearest')
         self.fig.colorbar(self.im)
-        self.Scroll.setMaximum(self.slices)
-        self.Scroll.setValue(self.ind)
+        self.Scroll_Horz.setMaximum(self.slices)
+        self.Scroll_Horz.setValue(self.ind)
+        self.Scroll_Vert.setMaximum(self.slices)
+        self.Scroll_Vert.setValue(self.ind)
 
     def readslice(self, fd, ndim, dt, dim):
         if dim == 4:
