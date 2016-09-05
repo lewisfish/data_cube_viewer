@@ -40,11 +40,11 @@ class Main(QMainWindow, Ui_MainWindow):
     def sliderval(self):
         try:
             if self.XView.isChecked():
-                self.im.set_data(self.X[self.Scroll_Horz.value(), :, :])
+                self.im.set_data(self.X[self.Scroll_Vert.value(), :, :])
             elif self.YView.isChecked():
-                self.im.set_data(self.X[:, self.Scroll_Horz.value(), :])
+                self.im.set_data(self.X[:, self.Scroll_Vert.value(), :])
             elif self.ZView.isChecked():
-                self.im.set_data(self.X[:, :, self.Scroll_Horz.value()])
+                self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
                 self.im.set_ydata(
                     self.X[self.Scroll_Horz.value(), self.Scroll_Vert.value(), :][::-1])
@@ -207,7 +207,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def readslice(self, fd, ndim, dt, dim):
         if dim == 4:
             if dt == np.float64:
-                magic = 16
+                magic = 4        # !this sometimes needs changed try powers of 2...
             elif dt == np.float32:
                 magic = 4
             shape = (ndim, ndim, ndim, magic)
@@ -245,8 +245,24 @@ if __name__ == '__main__':
     import sys
     from PyQt4 import QtGui
     import numpy as np
+    
+    if len(sys.argv) >=2:
+        if 'help' in str(sys.argv[1]) or str(sys.argv[1])=='-h':
+            print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
 
-    if len(sys.argv) < 3 and len(sys.argv) > 2:
+            print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
+            print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
+            print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+            sys.exit(0)
+            
+        elif len(sys.argv) < 3 and len(sys.argv) > 2:
+            print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
+
+            print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
+            print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
+            print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+            sys.exit(0)
+    else:
         print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
 
         print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
