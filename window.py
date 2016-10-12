@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Tue Aug  9 12:28:06 2016
+# Created: Mon Sep  5 14:44:01 2016
 #      by: PyQt5 UI code generator 5.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -72,6 +72,8 @@ class Ui_MainWindow(object):
         self.menuBar.setObjectName("menuBar")
         self.menu_Menu = QtWidgets.QMenu(self.menuBar)
         self.menu_Menu.setObjectName("menu_Menu")
+        self.menuSettings = QtWidgets.QMenu(self.menu_Menu)
+        self.menuSettings.setObjectName("menuSettings")
         MainWindow.setMenuBar(self.menuBar)
         self.statusBar = QtWidgets.QStatusBar(MainWindow)
         self.statusBar.setObjectName("statusBar")
@@ -80,8 +82,13 @@ class Ui_MainWindow(object):
         self.Open.setObjectName("Open")
         self.Reset = QtWidgets.QAction(MainWindow)
         self.Reset.setObjectName("Reset")
+        self.AutoScale = QtWidgets.QAction(MainWindow)
+        self.AutoScale.setCheckable(True)
+        self.AutoScale.setObjectName("AutoScale")
+        self.menuSettings.addAction(self.AutoScale)
         self.menu_Menu.addAction(self.Open)
         self.menu_Menu.addAction(self.Reset)
+        self.menu_Menu.addAction(self.menuSettings.menuAction())
         self.menuBar.addAction(self.menu_Menu.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -96,10 +103,13 @@ class Ui_MainWindow(object):
         self.Bore.setText(_translate("MainWindow", "Draw Bore"))
         self.AverageBore.setText(_translate("MainWindow", "Avg. Bore"))
         self.menu_Menu.setTitle(_translate("MainWindow", "&Menu"))
+        self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
         self.Open.setText(_translate("MainWindow", "&Open"))
         self.Open.setToolTip(_translate("MainWindow", "Open a file"))
         self.Open.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.Reset.setText(_translate("MainWindow", "&Reset"))
         self.Reset.setToolTip(_translate("MainWindow", "Reset"))
         self.Reset.setShortcut(_translate("MainWindow", "Ctrl+R"))
+        self.AutoScale.setText(_translate("MainWindow", "AutoScale"))
+        self.AutoScale.setToolTip(_translate("MainWindow", "AutoScale colourbars"))
 

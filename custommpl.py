@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from PyQt4.uic import loadUiType
 
+import gc
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
@@ -9,6 +10,8 @@ from matplotlib.backends.backend_qt4agg import (
 Ui_MainWindow, QMainWindow = loadUiType('/home/lewis/data_cube/mainwindow.ui')
 
 
+## weird bug where if you change view plane to y or z then open a new file it plots in two subplots. seems to work if you select x view again?!?!?!
+
 class Main(QMainWindow, Ui_MainWindow):
 
     def __init__(self, ):
@@ -16,11 +19,13 @@ class Main(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.flag = 0
         self.ave = np.array([])
+        self.auto_flag = False
 
         self.XView.setChecked(True)
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
         self.X = np.array([])
+        self.AveBoreView = 'X'
 
         self.XView.toggled.connect(lambda: self.btnstate(self.XView))
         self.YView.toggled.connect(lambda: self.btnstate(self.YView))
@@ -35,8 +40,22 @@ class Main(QMainWindow, Ui_MainWindow):
         if len(sys.argv) >= 2:
             self.file_open(sys.argv[1:4])
         self.Open.triggered.connect(self.file_open)
+        self.Save_Avg_Bore.triggered.connect(self.saveBore)
         self.Reset.triggered.connect(self.reset_plot)
-
+        self.AutoScale.triggered.connect(self.Auto_Scale_plot)
+        self.Bore_View.triggered.connect(self.ViewBore)
+        
+    def ViewBore(self):
+        self.AveBoreView = self.showBvDialog()
+        self.BoreChecked()
+        
+    def Auto_Scale_plot(self):
+        print 'toggle',self.auto_flag
+        if not self.auto_flag:
+            self.auto_flag = True
+        else:
+            self.auto_flag = False
+    
     def sliderval(self):
         try:
             if self.XView.isChecked():
@@ -56,7 +75,8 @@ class Main(QMainWindow, Ui_MainWindow):
         
         try:
             self.im.axes.figure.canvas.draw()
-            # self.im.autoscale()
+            if self.auto_flag:
+                self.im.autoscale()
         except AttributeError:
             pass
 
@@ -75,6 +95,17 @@ class Main(QMainWindow, Ui_MainWindow):
         self.toolbar.close()
         # self.im.autoscale()
 
+    def saveBore(self,):
+    
+        name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        f = open(name, 'w')
+        if len(self.ave) > 1:
+            for i in range(len(self.ave)):
+                f.write(str(self.ave[i])+'\n')
+            f.close()
+        else:
+            print('Error saving File!')
+            print('No Data!!')
     def file_open(self, *args):
         if self.flag == 1:
             self.reset_plot()
@@ -161,25 +192,36 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Draw Bore":
             if b.isChecked() is True:
                 self.reset_plot()
-                self.im, = self.ax1.plot(self.X[self.ind, self.ind, :][::-1])
+                self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
                 self.addmpl()
 
         if b.text() == "Avg. Bore":
             if b.isChecked() is True:
-                self.reset_plot()
+                self.BoreChecked()
+    
+    def BoreChecked(self):
+        if self.AveBoreView == 'X':
+            self.view = (1, 2)
+        elif self.AveBoreView == 'Y':
+            self.view = (0, 2)
+        elif self.AveBoreView == 'Z':
+           self.view = (0, 1)
+        self.reset_plot()
 
-                if len(self.ave) == 0:
-                    self.ave = np.array([])
-                    self.ave = np.sum(self.X, (0, 1))
-                    self.ave /= (len(self.X[0]) * len(self.X[1]))
+        if len(self.ave) == 0:
+            self.ave = np.array([])
+            self.ave = np.sum(self.X, self.view)
+            self.ave /= (len(self.X[0]) * len(self.X[1]))
 
-                self.im = self.ax1.plot(self.ave[::-1])
-                self.addmpl()
+        self.im = self.ax1.plot(self.ave)
+        self.addmpl()
 
     def reset_plot(self, ):
         self.ave = np.array([])
+        gc.collect()#fixes most of memory leak
         self.fig.clf()
         self.ax1.clear()
+
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
         try:
@@ -192,6 +234,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.rmmpl()
 
     def init_plot(self, ):
+        try:
+            self.rmmpl()
+        except:
+            pass
         self.XView.setChecked(True)
         self.addmpl()
         rows, cols, self.slices = self.X.shape
@@ -238,6 +284,15 @@ class Main(QMainWindow, Ui_MainWindow):
         if ok and item:
             return item
 
+    def showBvDialog(self, ):
+        items = ("X", "Y", "Z")
+        
+        item, ok = QtGui.QInputDialog.getItem(self, "Select Average Bore Direction",
+                                              "Views", items, 0, False)
+                                               
+        if ok and item:
+            return item
+        
     def ErrorDialog(self, ErrMsg):
         QtGui.QMessageBox.warning(self, "Error", ErrMsg)
 

@@ -122,8 +122,17 @@
     <property name="title">
      <string>&amp;Menu</string>
     </property>
+    <widget class="QMenu" name="menuSettings">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <addaction name="AutoScale"/>
+     <addaction name="Bore_View"/>
+    </widget>
     <addaction name="Open"/>
+    <addaction name="Save_Avg_Bore"/>
     <addaction name="Reset"/>
+    <addaction name="menuSettings"/>
    </widget>
    <addaction name="menu_Menu"/>
   </widget>
@@ -148,6 +157,36 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="AutoScale">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AutoScale</string>
+   </property>
+   <property name="toolTip">
+    <string>AutoScale colourbars</string>
+   </property>
+  </action>
+  <action name="Bore_View">
+   <property name="text">
+    <string>&amp;Bore &amp;View</string>
+   </property>
+   <property name="toolTip">
+    <string>Select Bore View</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
+   </property>
+  </action>
+  <action name="Save_Avg_Bore">
+   <property name="text">
+    <string>&amp;Save Avg. Bore</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>
