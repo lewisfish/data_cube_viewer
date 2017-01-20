@@ -13,10 +13,11 @@ Currently can view Fluence and Avgerage fluence per layer from x, y, and z plane
 
 ####ToDo
 
-  - Fix bugs
+  - Fix bugs(memory leak??)
   - Ability to open any fortran unformmated binary file
-  - Controlable colorbars
+  - Controlable colorbars(partially done with autoscale)
   - Save data from whats on screen
+  - Generate gifs
   - more...
 
 
