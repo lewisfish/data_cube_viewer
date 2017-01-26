@@ -7,6 +7,7 @@ Files have to be written by
 open(unit, file = file_name, access='direct', form='unformatted', recl=record_length)
 
 Currently can view Fluence and Avgerage fluence per layer from x, y, and z planes. Also can view Average Fluence per layer and boreholes at any position.
+Can save plots of average fluence and gifs of slices.
 
 ![Screenshot]
 (https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
@@ -17,7 +18,6 @@ Currently can view Fluence and Avgerage fluence per layer from x, y, and z plane
   - Ability to open any fortran unformmated binary file
   - Controlable colorbars(partially done with autoscale)
   - Save data from whats on screen
-  - Generate gifs
   - more...
 
 
