@@ -2,6 +2,7 @@
 from PyQt4.uic import loadUiType
 
 import gc
+import os
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
@@ -23,7 +24,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.auto_flag = False
         self.spinBoxval = 0
         self.spinBox.hide()
-
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -48,8 +48,20 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Reset.triggered.connect(self.reset_plot)
         self.AutoScale.triggered.connect(self.Auto_Scale_plot)
         self.Bore_View.triggered.connect(self.ViewBore)
+        self.action_Save_Gif.triggered.connect(self.saveGif)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
+
+    def saveGif(self):
+        rang = self.showGifframesDialog()
+        step = self.showGifstepDialog()
+        for i in range(rang):
+            self.Scroll_Horz.setValue(100)
+            self.Scroll_Vert.setValue(i*step)
+            self.sliderval()
+            self.fig.savefig('pic'+str(i)+'.png')
+        os.system('convert -delay 20 -trim +repage $(ls pic*.png -v) test.gif')
+        os.system('rm pic*.png')
 
     def changeSpinbox(self):
         self.spinBoxval = int(self.spinBox.value())
@@ -109,7 +121,6 @@ class Main(QMainWindow, Ui_MainWindow):
         # self.im.autoscale()
 
     def saveBore(self,):
-
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         f = open(name, 'w')
         if len(self.ave) > 1:
@@ -286,6 +297,16 @@ class Main(QMainWindow, Ui_MainWindow):
             data = data[:, :, :, self.spinBoxval]
         self.X = data[:, :, :]
         del data
+
+    def showGifframesDialog(self, ):
+        text, ok = QtGui.QInputDialog.getInt(self, '# of frames', 'Enter # of frames:')
+        if ok:
+            return(text)
+
+    def showGifstepDialog(self, ):
+        text, ok = QtGui.QInputDialog.getInt(self, 'Step size', 'Enter value of step:')
+        if ok:
+            return(text)
 
     def showNdimDialog(self, ):
         text1, ok1 = QtGui.QInputDialog.getInt(self, 'Input Ndim', 'Enter Ndim:')

@@ -138,6 +138,7 @@
     </widget>
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
+    <addaction name="action_Save_Gif"/>
     <addaction name="Reset"/>
     <addaction name="menuSettings"/>
    </widget>
@@ -197,6 +198,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="action_Save_Gif">
+   <property name="text">
+    <string>&amp;Save Gif</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+G</string>
    </property>
   </action>
  </widget>
