@@ -3,6 +3,7 @@ from PyQt4.uic import loadUiType
 
 import gc
 import os
+
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
@@ -10,8 +11,6 @@ from matplotlib.backends.backend_qt4agg import (
 
 Ui_MainWindow, QMainWindow = loadUiType('/home/lewis/data_cube/mainwindow.ui')
 
-
-# weird bug where if you change view plane to y or z then open a new file it plots in two subplots. seems to work if you select x view again?!?!?!
 
 class Main(QMainWindow, Ui_MainWindow):
 
@@ -57,9 +56,9 @@ class Main(QMainWindow, Ui_MainWindow):
         step = self.showGifstepDialog()
         for i in range(rang):
             self.Scroll_Horz.setValue(100)
-            self.Scroll_Vert.setValue(i*step)
+            self.Scroll_Vert.setValue(i * step)
             self.sliderval()
-            self.fig.savefig('pic'+str(i)+'.png')
+            self.fig.savefig('pic' + str(i) + '.png')
         os.system('convert -delay 20 -trim +repage $(ls pic*.png -v) test.gif')
         os.system('rm pic*.png')
 
@@ -125,7 +124,7 @@ class Main(QMainWindow, Ui_MainWindow):
         f = open(name, 'w')
         if len(self.ave) > 1:
             for i in range(len(self.ave)):
-                f.write(str(self.ave[i])+'\n')
+                f.write(str(self.ave[i]) + '\n')
             f.close()
         else:
             print('Error saving File!')
@@ -186,7 +185,8 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
         try:
             # del self.X
-            self.readslice(fd, int(ndim[0]), int(ndim[1]), int(ndim[2]), dt, dim)
+            self.readslice(fd, int(ndim[0]), int(
+                ndim[1]), int(ndim[2]), dt, dim)
             self.init_plot()
         except ValueError:
             self.ErrorDialog("Value of Ndim incorrect for this data cube.")
@@ -196,7 +196,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text() == "X View":
             if b.isChecked() is True:
-                self.reset_plot()
+                self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            cmap='cubehelix', interpolation='nearest')
                 self.fig.colorbar(self.im)
@@ -204,7 +204,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text() == "Y View":
             if b.isChecked() is True:
-                self.reset_plot()
+                self.reset_plot(False)
                 self.im = self.ax1.matshow(
                     self.X[:, self.ind, :], cmap='cubehelix', interpolation='nearest')
                 self.fig.colorbar(self.im)
@@ -212,7 +212,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text() == "Z View":
             if b.isChecked() is True:
-                self.reset_plot()
+                self.reset_plot(False)
                 self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap='cubehelix', interpolation='nearest')
                 self.fig.colorbar(self.im)
@@ -220,7 +220,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text() == "Draw Bore":
             if b.isChecked() is True:
-                self.reset_plot()
+                self.reset_plot(False)
                 self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
                 self.addmpl()
 
@@ -235,7 +235,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.view = (0, 2)
         elif self.AveBoreView == 'Z':
             self.view = (0, 1)
-        self.reset_plot()
+        self.reset_plot(False)
 
         if len(self.ave) == 0:
             self.ave = np.array([])
@@ -245,11 +245,14 @@ class Main(QMainWindow, Ui_MainWindow):
         self.im = self.ax1.plot(self.ave)
         self.addmpl()
 
-    def reset_plot(self, ):
+    def reset_plot(self, *args):
         self.ave = np.array([])
-        gc.collect()  # fixes most of memory leak
+        # if args:
+        #     if not args[0]:
+        #         self.X = None
         self.fig.clf()
         self.ax1.clear()
+        gc.collect()  # fixes most of memory leak
 
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
@@ -270,7 +273,7 @@ class Main(QMainWindow, Ui_MainWindow):
         # self.XView.setChecked(True)
         self.addmpl()
         rows, cols, self.slices = self.X.shape
-        self.ind = rows / 2
+        self.ind = int(rows / 2)
         self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                    cmap='cubehelix', interpolation='nearest')
         self.fig.colorbar(self.im)
@@ -282,7 +285,8 @@ class Main(QMainWindow, Ui_MainWindow):
     def readslice(self, fd, dimx, dimy, dimz, dt, dim):
         if dim == 4:
             if dt == np.float64:
-                magic = 4        # !this sometimes needs changed try powers of 2...
+                # !this sometimes needs changed try powers of 2...
+                magic = 4
             elif dt == np.float32:
                 magic = 4
             shape = (dimx, dimy, dimz, magic)
@@ -299,21 +303,26 @@ class Main(QMainWindow, Ui_MainWindow):
         del data
 
     def showGifframesDialog(self, ):
-        text, ok = QtGui.QInputDialog.getInt(self, '# of frames', 'Enter # of frames:')
+        text, ok = QtGui.QInputDialog.getInt(
+            self, '# of frames', 'Enter # of frames:')
         if ok:
             return(text)
 
     def showGifstepDialog(self, ):
-        text, ok = QtGui.QInputDialog.getInt(self, 'Step size', 'Enter value of step:')
+        text, ok = QtGui.QInputDialog.getInt(
+            self, 'Step size', 'Enter value of step:')
         if ok:
             return(text)
 
     def showNdimDialog(self, ):
-        text1, ok1 = QtGui.QInputDialog.getInt(self, 'Input Ndim', 'Enter Ndim:')
+        text1, ok1 = QtGui.QInputDialog.getInt(
+            self, 'Input Ndim', 'Enter Ndim:')
         if ok1:
-            text2, ok2 = QtGui.QInputDialog.getInt(self, 'Input Ndim', 'Enter Ndim:')
+            text2, ok2 = QtGui.QInputDialog.getInt(
+                self, 'Input Ndim', 'Enter Ndim:')
             if ok2:
-                text3, ok3 = QtGui.QInputDialog.getInt(self, 'Input Ndim', 'Enter Ndim:')
+                text3, ok3 = QtGui.QInputDialog.getInt(
+                    self, 'Input Ndim', 'Enter Ndim:')
                 if ok3:
                     return (text1, text2, text3)
 
@@ -344,26 +353,26 @@ if __name__ == '__main__':
 
     if len(sys.argv) >= 2:
         if 'help' in str(sys.argv[1]) or str(sys.argv[1]) == '-h':
-            print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
+            print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
 
-            print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
-            print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
-            print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+            print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
+            print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
+            print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
             sys.exit(0)
 
         elif len(sys.argv) < 3 and len(sys.argv) > 2:
-            print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
+            print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
 
-            print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
-            print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
-            print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+            print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
+            print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
+            print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
             sys.exit(0)
     else:
-        print '\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)'
+        print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
 
-        print'\nNDIM, \t    gives the dimensions of the data cube to be examined'
-        print'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8'
-        print'\t    (1)\t\t  (2)\t\t(3)\t      (4)\n'
+        print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
+        print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
+        print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
         sys.exit(0)
 
     fig = Figure()
