@@ -12,6 +12,11 @@ Can save plots of average fluence and gifs of slices.
 ![Screenshot]
 (https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
 
+##Requires
+Matplotlib
+
+PyQt4
+
 ####ToDo
 
   - Fix bugs(memory leak??)
