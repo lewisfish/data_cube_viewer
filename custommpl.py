@@ -9,7 +9,7 @@ from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 
-Ui_MainWindow, QMainWindow = loadUiType('/home/lewis/data_cube/mainwindow.ui')
+Ui_MainWindow, QMainWindow = loadUiType('./mainwindow.ui')
 
 
 class Main(QMainWindow, Ui_MainWindow):
