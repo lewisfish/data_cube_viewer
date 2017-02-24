@@ -58,8 +58,9 @@ class Main(QMainWindow, Ui_MainWindow):
             self.Scroll_Horz.setValue(100)
             self.Scroll_Vert.setValue(i * step)
             self.sliderval()
-            self.fig.savefig('pic' + str(i) + '.png')
-        os.system('convert -delay 20 -trim +repage $(ls pic*.png -v) test.gif')
+            extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
+        os.system('convert -delay 20 $(ls pic*.png -v) b.gif')
         os.system('rm pic*.png')
 
     def changeSpinbox(self):
@@ -242,7 +243,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.ave = np.sum(self.X, self.view)
             self.ave /= (len(self.X[self.view[0]]) * len(self.X[self.view[1]]))
 
-        self.im = self.ax1.plot(self.ave)
+        self.im = self.ax1.plot(self.ave[::-1])
         self.addmpl()
 
     def reset_plot(self, *args):

@@ -9,3 +9,5 @@
 *.h
 *.pro.user
 *.pro.user.*
+*.gif
+pic*.png
