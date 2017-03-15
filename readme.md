@@ -1,4 +1,4 @@
-#Data Cube Viewer 
+# Data Cube Viewer 
 
 Python/Qt program to view a data cube by slicing it up. 
 
@@ -9,15 +9,14 @@ open(unit, file = file_name, access='direct', form='unformatted', recl=record_le
 Currently can view Fluence and Avgerage fluence per layer from x, y, and z planes. Also can view Average Fluence per layer and boreholes at any position.
 Can save plots of average fluence and gifs of slices.
 
-![Screenshot]
-(https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
+![Screenshot](https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
 
-##Requires
+## Requires
 Matplotlib
 
 PyQt4
 
-####ToDo
+#### ToDo
 
   - Fix bugs(memory leak??)
   - Ability to open any fortran unformmated binary file
