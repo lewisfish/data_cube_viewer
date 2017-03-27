@@ -8,9 +8,11 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+import matplotlib.cm as cm
 
 path = os.path.abspath(os.path.dirname(__file__))
 Ui_MainWindow, QMainWindow = loadUiType(path + '/mainwindow.ui')
+
 
 class Main(QMainWindow, Ui_MainWindow):
 
@@ -23,6 +25,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.auto_flag = False
         self.spinBoxval = 0
         self.spinBox.hide()
+
+        self.colours = sorted(m for m in cm.datad)
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -54,19 +58,25 @@ class Main(QMainWindow, Ui_MainWindow):
     def saveGif(self):
         rang = self.showGifframesDialog()
         step = self.showGifstepDialog()
+        name = self.showGifDialog()
+        tight = self.showGifExtent()
         for i in range(rang):
-            self.Scroll_Horz.setValue(100)
+            self.Scroll_Horz.setValue(self.ind)
             self.Scroll_Vert.setValue(i * step)
             self.sliderval()
-            extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
-        os.system('convert -delay 20 $(ls pic*.png -v) b.gif')
-        os.system('rm pic*.png')
+            if tight:
+                extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+                self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
+            else:
+                self.fig.savefig('pic' + str(i) + '.png')
+        os.system('ffmpeg -i pic*.png ' + name + '.webm')
+        # os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
+        # os.system('rm pic*.png')
 
     def changeSpinbox(self):
         self.spinBoxval = int(self.spinBox.value())
         fd = open(self.name, 'rb')
-        self.readslice(fd, 201, 201, 201, np.float64, 4)
+        self.readslice(fd, 200, 200, 200, np.float64, 4)
         self.reset_plot()
         self.init_plot()
 
@@ -75,7 +85,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.BoreChecked()
 
     def Auto_Scale_plot(self):
-        # print 'toggle', self.auto_flag
         if not self.auto_flag:
             self.auto_flag = True
         else:
@@ -128,8 +137,9 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(self.ave[i]) + '\n')
             f.close()
         else:
-            print('Error saving File!')
-            print('No Data!!')
+            tmp = self.X[:, self.ind, self.ind]
+            for i in range(len(tmp)):
+                f.write(str(tmp[i]) + '\n')
 
     def file_open(self, *args):
         if self.flag == 1:
@@ -315,6 +325,19 @@ class Main(QMainWindow, Ui_MainWindow):
         if ok:
             return(text)
 
+    def showGifExtent(self, ):
+        items = ("Colour Bar", "No Colour Bar")
+
+        text, ok = QtGui.QInputDialog.getItem(
+            self, "Colour Bar on GIF?", " ", items, 0, False)
+
+        if ok and text:
+            if items == "Colour Bar":
+                text = False
+            else:
+                text = True
+            return text
+
     def showNdimDialog(self, ):
         text1, ok1 = QtGui.QInputDialog.getInt(
             self, 'Input Ndim', 'Enter Ndim:')
@@ -344,8 +367,14 @@ class Main(QMainWindow, Ui_MainWindow):
         if ok and item:
             return item
 
+    def showGifDialog(self, ):
+        text, ok = QtGui.QInputDialog.getText(self, 'Filename Dialog', 'Enter filename:')
+        if ok:
+            return str(text)
+
     def ErrorDialog(self, ErrMsg):
         QtGui.QMessageBox.warning(self, "Error", ErrMsg)
+
 
 if __name__ == '__main__':
     import sys
