@@ -25,7 +25,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.auto_flag = False
         self.spinBoxval = 0
         self.spinBox.hide()
-        self.colourmap = 'cubehelix'
+        self.colourmap = 'viridis'
 
         self.colours = sorted(m for m in cm.datad)
 
@@ -59,7 +59,8 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def changeColourMap(self, ):
         self.colourmap = self.showColourmapsDialog()
-        print(self.colourmap)
+        self.reset_plot(False)
+        self.init_plot()
 
     def saveGif(self):
         rang = self.showGifframesDialog()
@@ -215,7 +216,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                           cmap=self.colourmap, interpolation='nearest')
+                                           cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
                 self.addmpl()
 
@@ -223,7 +224,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(
-                    self.X[:, self.ind, :], cmap=self.colourmap, interpolation='nearest')
+                    self.X[:, self.ind, :], cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
                 self.addmpl()
 
@@ -231,7 +232,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(
-                    self.X[:, :, self.ind], cmap=self.colourmap, interpolation='nearest')
+                    self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
                 self.addmpl()
 
@@ -292,7 +293,7 @@ class Main(QMainWindow, Ui_MainWindow):
         rows, cols, self.slices = self.X.shape
         self.ind = int(rows / 2)
         self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                   cmap=self.colourmap, interpolation='nearest')
+                                   cmap=str(self.colourmap), interpolation='nearest')
         self.fig.colorbar(self.im)
         self.Scroll_Horz.setMaximum(self.slices)
         self.Scroll_Horz.setValue(self.ind)
@@ -374,25 +375,22 @@ class Main(QMainWindow, Ui_MainWindow):
             return item
 
     def showGifDialog(self, ):
-        text, ok = QtGui.QInputDialog.getText(self, 'Filename Dialog', 'Enter filename:')
+        text, ok = QtGui.QInputDialog.getText(
+            self, 'Filename Dialog', 'Enter filename:')
         if ok:
             return str(text)
 
     def showColourmapsDialog(self, ):
-        items = cmaps = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn', 'BuPu',
-                         'GnBu', 'Greens', 'Greys', 'Oranges', 'OrRd',
-                         'PuBu', 'PuBuGn', 'PuRd', 'Purples', 'RdPu',
-                         'Reds', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'bone', 'cool',
-                         'copper', 'gist_heat', 'gray', 'hot',
-                         'pink', 'spring', 'summer', 'winter', 'BrBG', 'bwr', 'coolwarm', 'PiYG', 'PRGn', 'PuOr',
-                         'RdBu', 'RdGy', 'RdYlBu', 'RdYlGn', 'Spectral',
-                         'seismic', 'Accent', 'Dark2', 'Paired', 'Pastel1',
-                         'Pastel2', 'Set1', 'Set2', 'Set3', 'Vega10',
-                         'Vega20', 'Vega20b', 'Vega20c', 'gist_earth', 'terrain', 'ocean', 'gist_stern',
-                         'brg', 'CMRmap', 'cubehelix',
-                         'gnuplot', 'gnuplot2', 'gist_ncar',
-                         'nipy_spectral', 'jet', 'rainbow',
-                         'gist_rainbow', 'hsv', 'flag', 'prism')
+        items = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn', 'BuPu',
+                 'GnBu', 'Greens', 'Greys', 'Oranges', 'OrRd', 'PuBu', 'PuBuGn', 'PuRd',
+                 'Purples', 'RdPu', 'Reds', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot',
+                 'autumn', 'bone', 'cool', 'copper', 'gist_heat', 'gray', 'hot', 'pink',
+                 'spring', 'summer', 'winter', 'BrBG', 'bwr', 'coolwarm', 'PiYG', 'PRGn',
+                 'PuOr', 'RdBu', 'RdGy', 'RdYlBu', 'RdYlGn', 'Spectral', 'seismic', 'Accent',
+                 'Dark2', 'Paired', 'Pastel1', 'Pastel2', 'Set1', 'Set2', 'Set3', 'Vega10',
+                 'Vega20', 'Vega20b', 'Vega20c', 'gist_earth', 'terrain', 'ocean', 'gist_stern',
+                 'brg', 'CMRmap', 'cubehelix', 'gnuplot', 'gnuplot2', 'gist_ncar',
+                 'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow', 'hsv', 'flag', 'prism')
         item, ok = QtGui.QInputDialog.getItem(self, "Select Colour Map",
                                               "Cmaps", items, 0, False)
         if ok and item:
@@ -412,7 +410,8 @@ if __name__ == '__main__':
             print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
 
             print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
-            print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
+            print(
+                'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
             print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
             sys.exit(0)
 
@@ -420,7 +419,8 @@ if __name__ == '__main__':
             print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
 
             print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
-            print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
+            print(
+                'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
             print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
             sys.exit(0)
     else:
