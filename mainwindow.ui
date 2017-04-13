@@ -135,6 +135,7 @@
      </property>
      <addaction name="AutoScale"/>
      <addaction name="Bore_View"/>
+     <addaction name="action_Colour_Map"/>
     </widget>
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
@@ -206,6 +207,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+G</string>
+   </property>
+  </action>
+  <action name="action_Colour_Map">
+   <property name="text">
+    <string>&amp;Colour Map</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+M</string>
    </property>
   </action>
  </widget>
