@@ -62,16 +62,16 @@ class Main(QMainWindow, Ui_MainWindow):
         tight = self.showGifExtent()
         for i in range(rang):
             self.Scroll_Horz.setValue(self.ind)
-            self.Scroll_Vert.setValue(i * step)
+            self.Scroll_Vert.setValue(rang - (i * step))
             self.sliderval()
             if tight:
                 extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
                 self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
             else:
                 self.fig.savefig('pic' + str(i) + '.png')
-        os.system('ffmpeg -i pic*.png ' + name + '.webm')
-        # os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
-        # os.system('rm pic*.png')
+        # os.system('ffmpeg -i pic*.png ' + name + '.webm')
+        os.system('convert -delay 20 $(ls pic*.png -v) -loop 0 ' + name + '.gif')
+        os.system('rm pic*.png')
 
     def changeSpinbox(self):
         self.spinBoxval = int(self.spinBox.value())
@@ -100,7 +100,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
                 self.im.set_ydata(
-                    self.X[self.Scroll_Horz.value(), self.Scroll_Vert.value(), :][::-1])
+                    self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::-1])
             elif self.AverageBore.isChecked():
                 self.Scroll_Horz.setValue(self.ind)
                 self.Scroll_Vert.setValue(self.ind)
