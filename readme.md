@@ -11,11 +11,12 @@ write(unit, rec=1)
 
 Currently can view Fluence and Avgerage fluence per layer from x, y, and z planes. Also can view boreholes at any position.
 Can save plots of average fluence and gifs of slices.
+Ability to change colour map of plot.
 
 ![Screenshot](https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
 
 ## Requires
-Matplotlib
+Matplotlib >= 1.5
 
 PyQt4
 
