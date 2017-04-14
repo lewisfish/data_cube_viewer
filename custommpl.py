@@ -8,7 +8,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
-import matplotlib.cm as cm
 
 path = os.path.abspath(os.path.dirname(__file__))
 Ui_MainWindow, QMainWindow = loadUiType(path + '/mainwindow.ui')
@@ -26,8 +25,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.spinBoxval = 0
         self.spinBox.hide()
         self.colourmap = 'viridis'
-
-        self.colours = sorted(m for m in cm.datad)
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -89,6 +86,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def ViewBore(self):
         self.AveBoreView = self.showBvDialog()
+        self.AverageBore.setChecked(True)
         self.BoreChecked()
 
     def Auto_Scale_plot(self):
@@ -130,10 +128,13 @@ class Main(QMainWindow, Ui_MainWindow):
         self.mplvl.addWidget(self.toolbar)
 
     def rmmpl(self):
-        self.mplvl.removeWidget(self.canvas)
-        self.canvas.close()
-        self.mplvl.removeWidget(self.toolbar)
-        self.toolbar.close()
+        try:
+            self.mplvl.removeWidget(self.canvas)
+            self.canvas.close()
+            self.mplvl.removeWidget(self.toolbar)
+            self.toolbar.close()
+        except:
+            pass
         # self.im.autoscale()
 
     def saveBore(self,):
@@ -245,6 +246,8 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Avg. Bore":
             if b.isChecked() is True:
                 self.BoreChecked()
+            else:
+                print('here')
 
     def BoreChecked(self):
         if self.AveBoreView == 'X':
@@ -289,12 +292,19 @@ class Main(QMainWindow, Ui_MainWindow):
         except:
             pass
         # self.XView.setChecked(True)
-        self.addmpl()
         rows, cols, self.slices = self.X.shape
         self.ind = int(rows / 2)
-        self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                   cmap=str(self.colourmap), interpolation='nearest')
-        self.fig.colorbar(self.im)
+        if self.XView.isChecked():
+            view = self.XView
+        elif self.YView.isChecked():
+            view = self.YView
+        elif self.ZView.isChecked():
+            view = self.ZView
+        elif self.AverageBore.isChecked():
+            view = self.AverageBore
+        elif self.Bore_View.isChecked():
+            view = self.ViewBore
+        self.btnstate(view)
         self.Scroll_Horz.setMaximum(self.slices)
         self.Scroll_Horz.setValue(self.ind)
         self.Scroll_Vert.setMaximum(self.slices)
