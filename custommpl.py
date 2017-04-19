@@ -105,7 +105,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
                 self.im.set_ydata(
-                    self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::-1])
+                    self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
             elif self.AverageBore.isChecked():
                 self.Scroll_Horz.setValue(self.ind)
                 self.Scroll_Vert.setValue(self.ind)
@@ -219,6 +219,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
+                self.ax1.set_aspect('auto')
                 self.addmpl()
 
         if b.text() == "Y View":
@@ -227,6 +228,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im = self.ax1.matshow(
                     self.X[:, self.ind, :], cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
+                self.ax1.set_aspect('auto')
                 self.addmpl()
 
         if b.text() == "Z View":
@@ -235,6 +237,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation='nearest')
                 self.fig.colorbar(self.im)
+                self.ax1.set_aspect('auto')
                 self.addmpl()
 
         if b.text() == "Draw Bore":
@@ -263,7 +266,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.ave = np.sum(self.X, self.view)
             self.ave /= (len(self.X[self.view[0]]) * len(self.X[self.view[1]]))
 
-        self.im = self.ax1.plot(self.ave[::-1])
+        self.im = self.ax1.plot(self.ave[::])
         self.addmpl()
 
     def reset_plot(self, *args):
