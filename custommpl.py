@@ -59,6 +59,14 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot(False)
         self.init_plot()
 
+    def is_perfect_cube(self, x):
+        x = abs(x)
+        p = x ** (1. / 3)
+        if int(round(p)) ** 3 == x:
+            return int(round(p))
+        else:
+            return 0
+
     def saveGif(self):
         rang = self.showGifframesDialog()
         step = self.showGifstepDialog()
@@ -73,8 +81,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
             else:
                 self.fig.savefig('pic' + str(i) + '.png')
-        # os.system('ffmpeg -i pic*.png ' + name + '.webm')
-        os.system('convert -delay 20 $(ls pic*.png -v) -loop 0 ' + name + '.gif')
+        os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
         os.system('rm pic*.png')
 
     def changeSpinbox(self):
@@ -179,8 +186,21 @@ class Main(QMainWindow, Ui_MainWindow):
                 elif int(item) == 4:
                     item = "3 dim Real*8"
             else:
-                ndim = self.showNdimDialog()
                 item = str(self.showDtDialog())
+                size = os.path.getsize(self.name)
+                if "Real*8" in item:
+                    if size % 8 == 0:
+                        size /= 8
+                elif "Real*4" in item:
+                    if size % 4 == 0:
+                        size /= 4
+
+                if self.is_perfect_cube(size) != 0:
+                    size = self.is_perfect_cube(size)
+                    ndim = (size, size, size)
+                else:
+                    ndim = self.showNdimDialog()
+
             args = None
         else:
             self.name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
