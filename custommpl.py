@@ -25,6 +25,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.spinBoxval = 0
         self.spinBox.hide()
         self.colourmap = 'viridis'
+        self.interpMethod = 'nearest'
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -51,11 +52,17 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Bore_View.triggered.connect(self.ViewBore)
         self.action_Save_Gif.triggered.connect(self.saveGif)
         self.action_Colour_Map.triggered.connect(self.changeColourMap)
+        self.action_Interpolation_Method.triggered.connect(self.changeInterpolationDialog)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
 
     def changeColourMap(self, ):
         self.colourmap = self.showColourmapsDialog()
+        self.reset_plot(False)
+        self.init_plot()
+
+    def changeInterpolationDialog(self, ):
+        self.interpMethod = str(self.showInterpolationDialog())
         self.reset_plot(False)
         self.init_plot()
 
@@ -237,7 +244,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
-                                           cmap=str(self.colourmap), interpolation='nearest')
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
@@ -246,7 +253,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(
-                    self.X[:, self.ind, :], cmap=str(self.colourmap), interpolation='nearest')
+                    self.X[:, self.ind, :], cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
@@ -255,7 +262,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(
-                    self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation='nearest')
+                    self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
@@ -426,6 +433,15 @@ class Main(QMainWindow, Ui_MainWindow):
                  'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow', 'hsv', 'flag', 'prism')
         item, ok = QtGui.QInputDialog.getItem(self, "Select Colour Map",
                                               "Cmaps", items, 0, False)
+        if ok and item:
+            return item
+
+    def showInterpolationDialog(self, ):
+        items = ('none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning',
+                 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
+                 'mitchell', 'sinc', 'lanczos')
+        item, ok = QtGui.QInputDialog.getItem(self, "Select Interpolation Method",
+                                              "Methods", items, 0, False)
         if ok and item:
             return item
 
