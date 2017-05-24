@@ -276,8 +276,6 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Avg. Bore":
             if b.isChecked() is True:
                 self.BoreChecked()
-            else:
-                print('here')
 
     def BoreChecked(self):
         if self.AveBoreView == 'X':
