@@ -79,9 +79,12 @@ class Main(QMainWindow, Ui_MainWindow):
         step = self.showGifstepDialog()
         name = self.showGifDialog()
         tight = self.showGifExtent()
+        tmpplace = self.Scroll_Vert.value()
+        if rang * step > tmpplace:
+            rang = tmpplace
         for i in range(rang):
             self.Scroll_Horz.setValue(self.ind)
-            self.Scroll_Vert.setValue(rang - (i * step))
+            self.Scroll_Vert.setValue(tmpplace - (i * step))
             self.sliderval()
             if tight:
                 extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
@@ -324,18 +327,22 @@ class Main(QMainWindow, Ui_MainWindow):
         self.ind = int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
+            self.Scroll_Vert.setMaximum(rows)
         elif self.YView.isChecked():
             view = self.YView
+            self.Scroll_Vert.setMaximum(cols)
         elif self.ZView.isChecked():
             view = self.ZView
+            self.Scroll_Vert.setMaximum(self.slices)
         elif self.AverageBore.isChecked():
             view = self.AverageBore
+            self.Scroll_Vert.setMaximum(self.slices)
         elif self.Bore_View.isChecked():
             view = self.ViewBore
+            self.Scroll_Vert.setMaximum(self.slices)
         self.btnstate(view)
         self.Scroll_Horz.setMaximum(self.slices)
         self.Scroll_Horz.setValue(self.ind)
-        self.Scroll_Vert.setMaximum(self.slices)
         self.Scroll_Vert.setValue(self.ind)
 
     def readslice(self, fd, dimx, dimy, dimz, dt, dim):
