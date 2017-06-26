@@ -152,7 +152,6 @@ class Main(QMainWindow, Ui_MainWindow):
             self.toolbar.close()
         except:
             pass
-        # self.im.autoscale()
 
     def saveBore(self,):
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
@@ -177,13 +176,11 @@ class Main(QMainWindow, Ui_MainWindow):
             args = args[0]
             self.name = args[0]
             if len(args) == 2:
-                # ndim = args[1]
                 ndim = (args[1], args[1], args[1])
 
                 item = str(self.showDtDialog())
 
             elif len(args) == 3:
-                # ndim = args[1]
                 ndim = (args[1], args[1], args[1])
                 item = args[2]
 
@@ -204,12 +201,12 @@ class Main(QMainWindow, Ui_MainWindow):
                 elif "Real*4" in item:
                     if size % 4 == 0:
                         size /= 4
-
-                if self.is_perfect_cube(size) != 0:
-                    size = self.is_perfect_cube(size)
-                    ndim = (size, size, size)
-                else:
-                    ndim = self.showNdimDialog()
+                # bug here. can be perfect cube, but not correct cube dims...
+                # if self.is_perfect_cube(size) != 0:
+                #     size = self.is_perfect_cube(size)
+                #     ndim = (size, size, size)
+                # else:
+                ndim = self.showNdimDialog()
 
             args = None
         else:
@@ -233,13 +230,11 @@ class Main(QMainWindow, Ui_MainWindow):
         except IOError:
             pass
         try:
-            # del self.X
             self.readslice(fd, int(ndim[0]), int(
                 ndim[1]), int(ndim[2]), dt, dim)
             self.init_plot()
         except ValueError:
             self.ErrorDialog("Value of Ndim incorrect for this data cube.")
-            # self.rmmpl()
 
     def btnstate(self, b):
 
@@ -264,6 +259,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Z View":
             if b.isChecked() is True:
                 self.reset_plot(False)
+                self.Scroll_Vert.setMaximum(self.slices)
                 self.im = self.ax1.matshow(
                     self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
@@ -299,9 +295,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def reset_plot(self, *args):
         self.ave = np.array([])
-        # if args:
-        #     if not args[0]:
-        #         self.X = None
+
         self.fig.clf()
         self.ax1.clear()
         gc.collect()  # fixes most of memory leak
@@ -322,7 +316,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.rmmpl()
         except:
             pass
-        # self.XView.setChecked(True)
+
         rows, cols, self.slices = self.X.shape
         self.ind = int(rows / 2)
         if self.XView.isChecked():
@@ -357,7 +351,6 @@ class Main(QMainWindow, Ui_MainWindow):
             shape = (dimx, dimy, dimz)
         data = np.fromfile(
             file=fd, dtype=dt, sep="")
-        # print len(data)
         data = data.reshape(shape, order='F')
         fd.close()
         if dim == 4:
