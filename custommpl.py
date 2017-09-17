@@ -261,6 +261,7 @@ class Main(QMainWindow, Ui_MainWindow):
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
+                self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
 
@@ -271,6 +272,7 @@ class Main(QMainWindow, Ui_MainWindow):
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
+                self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
 
@@ -282,6 +284,7 @@ class Main(QMainWindow, Ui_MainWindow):
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
+                self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
 
@@ -289,6 +292,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
+                self.fig.set_tight_layout(True)
                 self.addmpl()
 
         if b.text() == "Avg. Bore":
@@ -310,6 +314,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.ave /= (len(self.X[self.view[0]]) * len(self.X[self.view[1]]))
 
         self.im = self.ax1.plot(self.ave[::])
+        self.fig.set_tight_layout(True)
         self.addmpl()
 
     def reset_plot(self, *args):
@@ -470,7 +475,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self, 'Input cbar max', 'Enter max:')
             if ok2:
                 return (int(text1), int(text2))
-
 
     def ErrorDialog(self, ErrMsg):
         QtGui.QMessageBox.warning(self, "Error", ErrMsg)
