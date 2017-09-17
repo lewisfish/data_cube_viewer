@@ -26,6 +26,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.spinBox.hide()
         self.colourmap = 'viridis'
         self.interpMethod = 'nearest'
+        self.cmapmin = None
+        self.cmapmax = None
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -53,15 +55,27 @@ class Main(QMainWindow, Ui_MainWindow):
         self.action_Save_Gif.triggered.connect(self.saveGif)
         self.action_Colour_Map.triggered.connect(self.changeColourMap)
         self.action_Interpolation_Method.triggered.connect(self.changeInterpolationDialog)
+        self.action_Colour_Bar_Clip.triggered.connect(self.changeclipColourBarDialog)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
 
     def changeColourMap(self, ):
+        # change cmap
         self.colourmap = self.showColourmapsDialog()
         self.reset_plot(False)
         self.init_plot()
 
+    def changeclipColourBarDialog(self, ):
+        # change vmin, vmax for cbar
+        try:
+            self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
+        except TypeError:
+            pass
+        self.reset_plot(False)
+        self.init_plot()
+
     def changeInterpolationDialog(self, ):
+        # change interpolation method for image
         self.interpMethod = str(self.showInterpolationDialog())
         self.reset_plot(False)
         self.init_plot()
@@ -107,6 +121,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.BoreChecked()
 
     def Auto_Scale_plot(self):
+        self.cmapmin = None
+        self.cmapmax = None
         if not self.auto_flag:
             self.auto_flag = True
         else:
@@ -202,11 +218,11 @@ class Main(QMainWindow, Ui_MainWindow):
                     if size % 4 == 0:
                         size /= 4
                 # bug here. can be perfect cube, but not correct cube dims...
-                # if self.is_perfect_cube(size) != 0:
-                #     size = self.is_perfect_cube(size)
-                #     ndim = (size, size, size)
-                # else:
-                ndim = self.showNdimDialog()
+                if self.is_perfect_cube(size) != 0:
+                    size = self.is_perfect_cube(size)
+                    ndim = (size, size, size)
+                else:
+                    ndim = self.showNdimDialog()
 
             args = None
         else:
@@ -242,6 +258,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
+                                           vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
@@ -250,8 +267,9 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Y View":
             if b.isChecked() is True:
                 self.reset_plot(False)
-                self.im = self.ax1.matshow(
-                    self.X[:, self.ind, :], cmap=str(self.colourmap), interpolation=self.interpMethod)
+                self.im = self.ax1.matshow(self.X[:, self.ind, :],
+                                           vmin=self.cmapmin, vmax=self.cmapmax,
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
@@ -260,8 +278,9 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.Scroll_Vert.setMaximum(self.slices)
-                self.im = self.ax1.matshow(
-                    self.X[:, :, self.ind], cmap=str(self.colourmap), interpolation=self.interpMethod)
+                self.im = self.ax1.matshow(self.X[:, :, self.ind], 
+                                           vmin=self.cmapmin, vmax=self.cmapmax,
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
@@ -442,6 +461,16 @@ class Main(QMainWindow, Ui_MainWindow):
                                               "Methods", items, 0, False)
         if ok and item:
             return item
+
+    def showclipColourBarDialog(self, ):
+        text1, ok1 = QtGui.QInputDialog.getInt(
+            self, 'Input cbar min', 'Enter min:')
+        if ok1:
+            text2, ok2 = QtGui.QInputDialog.getInt(
+                self, 'Input cbar max', 'Enter max:')
+            if ok2:
+                return (int(text1), int(text2))
+
 
     def ErrorDialog(self, ErrMsg):
         QtGui.QMessageBox.warning(self, "Error", ErrMsg)

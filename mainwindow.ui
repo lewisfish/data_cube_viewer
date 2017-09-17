@@ -137,6 +137,7 @@
      <addaction name="Bore_View"/>
      <addaction name="action_Colour_Map"/>
      <addaction name="action_Interpolation_Method"/>
+     <addaction name="action_Colour_Bar_Clip"/>
     </widget>
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
@@ -224,6 +225,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="action_Colour_Bar_Clip">
+   <property name="text">
+    <string>&amp;Colour Bar Clip</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
    </property>
   </action>
  </widget>
