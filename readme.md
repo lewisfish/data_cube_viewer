@@ -7,11 +7,17 @@ Files have to be written by:
 
 open(unit, file=file_name, access='direct', form='unformatted', recl=record_length)
 
-write(unit, rec=1)
+write(u,recl=1)array
+
+or
+
+open(unit, file=file_name, access='stream', form='unformatted)
+
+write(u)array
 
 Currently can view Fluence and Avgerage fluence per layer from x, y, and z planes. Also can view boreholes at any position.
 Can save plots of average fluence and gifs of slices.
-Ability to change colour map of plot.
+Ability to change colour map of plot and clip colourbar.
 
 ![Screenshot](https://github.com/lewisfish/data_cube_viewer/blob/master/Screenshot.png)
 
@@ -22,8 +28,8 @@ PyQt4
 
 #### ToDo
 
-  - Fix bugs(memory leak??)
-  - Ability to open any fortran unformmated binary file
-  - Controlable colorbars(partially done with autoscale)
-  - Save data from whats on screen(partially done with gif making and saving of boreholes)
-  - more...
+  - [ ] Fix bugs(memory leak??)
+  - [ ] Ability to open any fortran unformmated binary file
+  - [x] Controlable colorbars(partially done with autoscale)
+  - [ ] Save data from whats on screen(partially done with gif making and saving of boreholes)
+  - [ ] more...
