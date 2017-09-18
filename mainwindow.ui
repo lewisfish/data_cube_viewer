@@ -142,6 +142,7 @@
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
     <addaction name="action_Save_Gif"/>
+    <addaction name="action_Save_Image"/>
     <addaction name="Reset"/>
     <addaction name="menuSettings"/>
    </widget>
@@ -233,6 +234,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="action_Save_Image">
+   <property name="text">
+    <string>&amp;Save Image</string>
    </property>
   </action>
  </widget>

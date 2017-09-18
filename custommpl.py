@@ -5,6 +5,7 @@ import gc
 import os
 
 from matplotlib.figure import Figure
+import matplotlib.ticker as ticker
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
@@ -28,6 +29,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.interpMethod = 'nearest'
         self.cmapmin = None
         self.cmapmax = None
+        self.hres = 1
+        self.vres = 1
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -56,8 +59,20 @@ class Main(QMainWindow, Ui_MainWindow):
         self.action_Colour_Map.triggered.connect(self.changeColourMap)
         self.action_Interpolation_Method.triggered.connect(self.changeInterpolationDialog)
         self.action_Colour_Bar_Clip.triggered.connect(self.changeclipColourBarDialog)
+        self.action_Save_Image.triggered.connect(self.saveIm)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
+
+    def saveIm(self, ):
+        name = self.showGifDialog()
+        self.hres, self.vres = self.showextentDialog()
+        # scale x, y ticks to actual scale based upon user definition
+        # thanks https://stackoverflow.com/a/17816809/6106938
+        ticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x*self.hres))
+        self.ax1.xaxis.set_major_formatter(ticks)
+        ticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y*self.vres))
+        self.ax1.yaxis.set_major_formatter(ticks)
+        self.fig.savefig(name + '.png')
 
     def changeColourMap(self, ):
         # change cmap
@@ -81,6 +96,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.init_plot()
 
     def is_perfect_cube(self, x):
+        # shitty cheat so i dont have to enter numbers...
         x = abs(x)
         p = x ** (1. / 3)
         if int(round(p)) ** 3 == x:
@@ -89,10 +105,11 @@ class Main(QMainWindow, Ui_MainWindow):
             return 0
 
     def saveGif(self):
-        rang = self.showGifframesDialog()
-        step = self.showGifstepDialog()
-        name = self.showGifDialog()
-        tight = self.showGifExtent()
+        rang = self.showGifframesDialog()  # get range of frames
+        step = self.showGifstepDialog()    # get number of images
+        name = self.showGifDialog()        # name of file
+        tight = self.showGifExtent()       # tight or not
+        # loop over range and make images
         tmpplace = self.Scroll_Vert.value()
         if rang * step > tmpplace:
             rang = tmpplace
@@ -105,10 +122,12 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
             else:
                 self.fig.savefig('pic' + str(i) + '.png')
+        # use imagemagick to create gif
         os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
         os.system('rm pic*.png')
 
     def changeSpinbox(self):
+        # for 4d data cubes
         self.spinBoxval = int(self.spinBox.value())
         fd = open(self.name, 'rb')
         self.readslice(fd, 200, 200, 200, np.float64, 4)
@@ -121,6 +140,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.BoreChecked()
 
     def Auto_Scale_plot(self):
+        # autoscale cbar on plot and reset clipping if any
         self.cmapmin = None
         self.cmapmax = None
         if not self.auto_flag:
@@ -129,6 +149,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.auto_flag = False
 
     def sliderval(self):
+        # move slider and update data
         try:
             if self.XView.isChecked():
                 self.im.set_data(self.X[self.Scroll_Vert.value(), :, :])
@@ -145,6 +166,7 @@ class Main(QMainWindow, Ui_MainWindow):
         except IndexError:
             pass
 
+        # try and redraw
         try:
             self.im.axes.figure.canvas.draw()
             if self.auto_flag:
@@ -153,6 +175,7 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
     def addmpl(self):
+        # add plot to anvas
         self.flag = 1
         self.canvas = FigureCanvas(self.fig)
         self.mplvl.addWidget(self.canvas)
@@ -161,6 +184,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.mplvl.addWidget(self.toolbar)
 
     def rmmpl(self):
+        # delete plot from canvas
         try:
             self.mplvl.removeWidget(self.canvas)
             self.canvas.close()
@@ -170,6 +194,7 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
     def saveBore(self,):
+        # save bore as a list of points
         name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         f = open(name, 'w')
         if len(self.ave) > 1:
@@ -270,7 +295,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
+                                           extent=[self.hmin, self.hmax, self.vmin, self.vmax])
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -280,9 +306,10 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.Scroll_Vert.setMaximum(self.slices)
-                self.im = self.ax1.matshow(self.X[:, :, self.ind], 
+                self.im = self.ax1.matshow(self.X[:, :, self.ind],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
+                                           extent=[self.hmin, self.hmax, self.vmin, self.vmax])
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -441,6 +468,15 @@ class Main(QMainWindow, Ui_MainWindow):
             self, 'Filename Dialog', 'Enter filename:')
         if ok:
             return str(text)
+
+    def showextentDialog(self, ):
+        hres, ok = QtGui.QInputDialog.getDouble(
+                self, 'Data Extent', 'Enter horizontal resolution:',  0, -100, 100, 9,)
+        if ok:
+            vres, ok = QtGui.QInputDialog.getDouble(
+                    self, 'Data Extent', 'Enter vertical resolution:',  0, -100, 100, 9,)
+            if ok:
+                return (hres, vres)
 
     def showColourmapsDialog(self, ):
         items = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn', 'BuPu',
