@@ -295,8 +295,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
-                                           extent=[self.hmin, self.hmax, self.vmin, self.vmax])
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -308,8 +307,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.Scroll_Vert.setMaximum(self.slices)
                 self.im = self.ax1.matshow(self.X[:, :, self.ind],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
-                                           extent=[self.hmin, self.hmax, self.vmin, self.vmax])
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
