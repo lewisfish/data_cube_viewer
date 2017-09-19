@@ -20,7 +20,6 @@ class Main(QMainWindow, Ui_MainWindow):
         super(Main, self).__init__()
         self.setupUi(self)
         self.showMaximized()
-        self.flag = 0
         self.ave = np.array([])
         self.auto_flag = False
         self.spinBoxval = 0
@@ -176,7 +175,6 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def addmpl(self):
         # add plot to anvas
-        self.flag = 1
         self.canvas = FigureCanvas(self.fig)
         self.mplvl.addWidget(self.canvas)
         self.canvas.draw()
@@ -207,8 +205,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(tmp[i]) + '\n')
 
     def file_open(self, *args):
-        if self.flag == 1:
-            self.reset_plot()
         try:
             self.reset_plot()
         except:
@@ -477,25 +473,29 @@ class Main(QMainWindow, Ui_MainWindow):
                 return (hres, vres)
 
     def showColourmapsDialog(self, ):
-        items = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn', 'BuPu',
-                 'GnBu', 'Greens', 'Greys', 'Oranges', 'OrRd', 'PuBu', 'PuBuGn', 'PuRd',
-                 'Purples', 'RdPu', 'Reds', 'YlGn', 'YlGnBu', 'YlOrBr', 'YlOrRd', 'afmhot',
-                 'autumn', 'bone', 'cool', 'copper', 'gist_heat', 'gray', 'hot', 'pink',
-                 'spring', 'summer', 'winter', 'BrBG', 'bwr', 'coolwarm', 'PiYG', 'PRGn',
-                 'PuOr', 'RdBu', 'RdGy', 'RdYlBu', 'RdYlGn', 'Spectral', 'seismic', 'Accent',
-                 'Dark2', 'Paired', 'Pastel1', 'Pastel2', 'Set1', 'Set2', 'Set3', 'Vega10',
-                 'Vega20', 'Vega20b', 'Vega20c', 'gist_earth', 'terrain', 'ocean', 'gist_stern',
-                 'brg', 'CMRmap', 'cubehelix', 'gnuplot', 'gnuplot2', 'gist_ncar',
-                 'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow', 'hsv', 'flag', 'prism')
+        items = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn',
+                 'BuPu', 'GnBu', 'Greens', 'Greys', 'Oranges', 'OrRd', 'PuBu',
+                 'PuBuGn', 'PuRd', 'Purples', 'RdPu', 'Reds', 'YlGn', 'YlGnBu',
+                 'YlOrBr', 'YlOrRd', 'afmhot', 'autumn', 'bone', 'cool',
+                 'copper', 'gist_heat', 'gray', 'hot', 'pink', 'spring',
+                 'summer', 'winter', 'BrBG', 'bwr', 'coolwarm', 'PiYG', 'PRGn',
+                 'PuOr', 'RdBu', 'RdGy', 'RdYlBu', 'RdYlGn', 'Spectral',
+                 'seismic', 'Accent', 'Dark2', 'Paired', 'Pastel1', 'Pastel2',
+                 'Set1', 'Set2', 'Set3', 'Vega10', 'Vega20', 'Vega20b',
+                 'Vega20c', 'gist_earth', 'terrain', 'ocean', 'gist_stern',
+                 'brg', 'CMRmap', 'cubehelix', 'gnuplot', 'gnuplot2',
+                 'gist_ncar', 'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow',
+                 'hsv', 'flag', 'prism')
         item, ok = QtGui.QInputDialog.getItem(self, "Select Colour Map",
                                               "Cmaps", items, 0, False)
         if ok and item:
             return item
 
     def showInterpolationDialog(self, ):
-        items = ('none', 'nearest', 'bilinear', 'bicubic', 'spline16', 'spline36', 'hanning',
-                 'hamming', 'hermite', 'kaiser', 'quadric', 'catrom', 'gaussian', 'bessel',
-                 'mitchell', 'sinc', 'lanczos')
+        items = ('none', 'nearest', 'bilinear', 'bicubic', 'spline16',
+                 'spline36', 'hanning', 'hamming', 'hermite', 'kaiser',
+                 'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
+                 'sinc', 'lanczos')
         item, ok = QtGui.QInputDialog.getItem(self, "Select Interpolation Method",
                                               "Methods", items, 0, False)
         if ok and item:
