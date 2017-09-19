@@ -138,6 +138,7 @@
      <addaction name="action_Colour_Map"/>
      <addaction name="action_Interpolation_Method"/>
      <addaction name="action_Colour_Bar_Clip"/>
+     <addaction name="action_Normalisation_Method"/>
     </widget>
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
@@ -239,6 +240,17 @@
   <action name="action_Save_Image">
    <property name="text">
     <string>&amp;Save Image</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="action_Normalisation_Method">
+   <property name="text">
+    <string>&amp;Normalisation Method</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
  </widget>

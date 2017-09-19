@@ -6,6 +6,7 @@ import os
 
 from matplotlib.figure import Figure
 import matplotlib.ticker as ticker
+import matplotlib.colors as colors
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
@@ -20,16 +21,19 @@ class Main(QMainWindow, Ui_MainWindow):
         super(Main, self).__init__()
         self.setupUi(self)
         self.showMaximized()
-        self.ave = np.array([])
-        self.auto_flag = False
-        self.spinBoxval = 0
-        self.spinBox.hide()
-        self.colourmap = 'viridis'
-        self.interpMethod = 'nearest'
-        self.cmapmin = None
+        self.ave = np.array([])         # empty array for average bore
+        self.auto_flag = False          # dunno...
+        self.spinBoxval = 0             # defualt 4D data_cube dimension
+        self.spinBox.hide()             # hide option unless 4D
+        self.colourmap = 'viridis'      # default colourmap
+        self.interpMethod = 'nearest'   # default interp method
+        self.cmapmin = None             # default colourbar range, i.e let matplotlib decide
         self.cmapmax = None
-        self.hres = 1
+        self.hres = 1                   # default res, i.e jut voxel numbers on axis
         self.vres = 1
+        self.Normx = None               # normalisation method. default set to None
+        self.Normy = None
+        self.Normz = None
 
         self.XView.setChecked(True)
         self.fig = Figure()
@@ -37,6 +41,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.X = np.array([])
         self.AveBoreView = 'X'
 
+        # change view of cube
         self.XView.toggled.connect(lambda: self.btnstate(self.XView))
         self.YView.toggled.connect(lambda: self.btnstate(self.YView))
         self.ZView.toggled.connect(lambda: self.btnstate(self.ZView))
@@ -44,10 +49,11 @@ class Main(QMainWindow, Ui_MainWindow):
         self.AverageBore.toggled.connect(
             lambda: self.btnstate(self.AverageBore))
 
+        # update data when slider moved
         self.Scroll_Horz.sliderMoved.connect(self.sliderval)
         self.Scroll_Vert.sliderMoved.connect(self.sliderval)
 
-        if len(sys.argv) >= 2:
+        if len(sys.argv) >= 2:                                  # open file dialog if no file provided on cmd line
             self.file_open(sys.argv[1:4])
         self.Open.triggered.connect(self.file_open)
         self.Save_Avg_Bore.triggered.connect(self.saveBore)
@@ -56,14 +62,43 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Bore_View.triggered.connect(self.ViewBore)
         self.action_Save_Gif.triggered.connect(self.saveGif)
         self.action_Colour_Map.triggered.connect(self.changeColourMap)
-        self.action_Interpolation_Method.triggered.connect(self.changeInterpolationDialog)
-        self.action_Colour_Bar_Clip.triggered.connect(self.changeclipColourBarDialog)
-        self.action_Save_Image.triggered.connect(self.saveIm)
+        self.action_Interpolation_Method.triggered.connect(self.changeInterpolationMethod)
+        self.action_Colour_Bar_Clip.triggered.connect(self.changeclipColourBarRange)
+        self.action_Save_Image.triggered.connect(self.saveImage)
+        self.action_Normalisation_Method.triggered.connect(self.changeNormMethod)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
 
-    def saveIm(self, ):
+    def changeNormMethod(self, ):
+        # func to change Normalisation method of matshow
+        method = self.getNormDialog()
+        if(method == 'Log'):
+            self.Normx = colors.LogNorm(vmin=0.1,
+                                        vmax=self.X[self.ind, :, :].max())
+            self.Normy = colors.LogNorm(vmin=0.1,
+                                        vmax=self.X[:, self.ind, :].max())
+            self.Normz = colors.LogNorm(vmin=0.1,
+                                        vmax=self.X[:, :, self.ind].max())
+        elif(method == 'Linear'):
+            self.Normx = None
+            self.Normy = None
+            self.Normz = None
+        self.reset_plot(False)
+        self.init_plot()
+
+    def saveImage(self, ):
+        # saves data and image of current view
         name = self.showGifDialog()
+        if self.XView.isChecked():
+            np.savetxt(name + '.dat', self.X[self.Scroll_Vert.value(), :, :],
+                       delimiter=' ')
+        elif self.YView.isChecked():
+            np.savetxt(name + '.dat', self.X[:, self.Scroll_Vert.value(), :],
+                       delimiter=' ')
+        elif self.ZView.isChecked():
+            np.savetxt(name + '.dat', self.X[:, :, self.Scroll_Vert.value()],
+                       delimiter=' ')
+
         self.hres, self.vres = self.showextentDialog()
         # scale x, y ticks to actual scale based upon user definition
         # thanks https://stackoverflow.com/a/17816809/6106938
@@ -79,7 +114,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot(False)
         self.init_plot()
 
-    def changeclipColourBarDialog(self, ):
+    def changeclipColourBarRange(self, ):
         # change vmin, vmax for cbar
         try:
             self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
@@ -88,7 +123,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot(False)
         self.init_plot()
 
-    def changeInterpolationDialog(self, ):
+    def changeInterpolationMethod(self, ):
         # change interpolation method for image
         self.interpMethod = str(self.showInterpolationDialog())
         self.reset_plot(False)
@@ -280,7 +315,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
+                                           norm=self.Normx)  # colors.LogNorm(vmin=0.1, vmax=self.X[self.ind, :, :].max())
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -291,7 +327,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.reset_plot(False)
                 self.im = self.ax1.matshow(self.X[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
+                                           norm=self.Normy)  # colors.LogNorm(vmin=0.1, vmax=self.X[:, self.ind, :].max()))
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -303,7 +340,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.Scroll_Vert.setMaximum(self.slices)
                 self.im = self.ax1.matshow(self.X[:, :, self.ind],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
-                                           cmap=str(self.colourmap), interpolation=self.interpMethod)
+                                           cmap=str(self.colourmap), interpolation=self.interpMethod,
+                                           norm=self.Normz)
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -471,6 +509,14 @@ class Main(QMainWindow, Ui_MainWindow):
                     self, 'Data Extent', 'Enter vertical resolution:',  0, -100, 100, 9,)
             if ok:
                 return (hres, vres)
+
+    def getNormDialog(self, ):
+        items = ("Log", "Linear")
+
+        item, ok = QtGui.QInputDialog.getItem(self, "Select cbar normalisation method",
+                                              "Method:", items, 0, False)
+        if ok and item:
+            return item
 
     def showColourmapsDialog(self, ):
         items = ('viridis', 'inferno', 'plasma', 'magma', 'Blues', 'BuGn',
