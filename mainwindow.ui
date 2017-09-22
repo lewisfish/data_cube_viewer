@@ -242,7 +242,7 @@
     <string>&amp;Save Image</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+A</string>
+    <string>Ctrl+D</string>
    </property>
   </action>
   <action name="action_Normalisation_Method">

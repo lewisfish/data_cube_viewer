@@ -53,7 +53,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Scroll_Horz.sliderMoved.connect(self.sliderval)
         self.Scroll_Vert.sliderMoved.connect(self.sliderval)
 
-        if len(sys.argv) >= 2:                                  # open file dialog if no file provided on cmd line
+        if len(sys.argv) >= 2:
+            # open file dialog if no file provided on cmd line
             self.file_open(sys.argv[1:4])
         self.Open.triggered.connect(self.file_open)
         self.Save_Avg_Bore.triggered.connect(self.saveBore)
@@ -79,6 +80,16 @@ class Main(QMainWindow, Ui_MainWindow):
                                         vmax=self.X[:, self.ind, :].max())
             self.Normz = colors.LogNorm(vmin=0.1,
                                         vmax=self.X[:, :, self.ind].max())
+        elif(method == 'Symmetric Log'):
+            self.Normx = colors.SymLogNorm(linthresh=1.,
+                                           vmin=self.X[self.ind, :, :].min(),
+                                           vmax=self.X[self.ind, :, :].max())
+            self.Normy = colors.SymLogNorm(linthresh=1.,
+                                           vmin=self.X[:, self.ind, :].min(),
+                                           vmax=self.X[:, self.ind, :].max())
+            self.Normz = colors.SymLogNorm(linthresh=1.,
+                                           vmin=self.X[:, :, self.ind].max(),
+                                           vmax=self.X[:, :, self.ind].max())
         elif(method == 'Linear'):
             self.Normx = None
             self.Normy = None
@@ -102,6 +113,9 @@ class Main(QMainWindow, Ui_MainWindow):
         self.hres, self.vres = self.showextentDialog()
         # scale x, y ticks to actual scale based upon user definition
         # thanks https://stackoverflow.com/a/17816809/6106938
+        # change so that it uses extent=[xmin, xmax, ymin, ymax]
+        # set default as None
+        # then change here. extent added to matshow(*args, extent=[...])
         ticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x*self.hres))
         self.ax1.xaxis.set_major_formatter(ticks)
         ticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y*self.vres))
@@ -235,7 +249,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(self.ave[i]) + '\n')
             f.close()
         else:
-            tmp = self.X[:, self.ind, self.ind]
+            tmp = self.X[:, self.Scroll_Horz.value() - 1, self.Scroll_Vert.value() - 1]
             for i in range(len(tmp)):
                 f.write(str(tmp[i]) + '\n')
 
@@ -503,15 +517,15 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def showextentDialog(self, ):
         hres, ok = QtGui.QInputDialog.getDouble(
-                self, 'Data Extent', 'Enter horizontal resolution:',  0, -100, 100, 9,)
+            self, 'Data Extent', 'Enter horizontal resolution:',  0, -100, 100, 9,)
         if ok:
             vres, ok = QtGui.QInputDialog.getDouble(
-                    self, 'Data Extent', 'Enter vertical resolution:',  0, -100, 100, 9,)
+                self, 'Data Extent', 'Enter vertical resolution:',  0, -100, 100, 9,)
             if ok:
                 return (hres, vres)
 
     def getNormDialog(self, ):
-        items = ("Log", "Linear")
+        items = ("Log", "Linear", "Symmetric Log")
 
         item, ok = QtGui.QInputDialog.getItem(self, "Select cbar normalisation method",
                                               "Method:", items, 0, False)
