@@ -22,7 +22,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.showMaximized()
         self.ave = np.array([])         # empty array for average bore
-        self.auto_flag = False          # dunno...
+        self.auto_flag = False          # autoscale flag
         self.spinBoxval = 0             # defualt 4D data_cube dimension
         self.spinBox.hide()             # hide option unless 4D
         self.colourmap = 'viridis'      # default colourmap
@@ -60,7 +60,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Save_Avg_Bore.triggered.connect(self.saveBore)
         self.Reset.triggered.connect(self.reset_plot)
         self.AutoScale.triggered.connect(self.Auto_Scale_plot)
-        self.Bore_View.triggered.connect(self.ViewBore)
+        # self.Bore_View.triggered.connect(self.ViewBore)
         self.action_Save_Gif.triggered.connect(self.saveGif)
         self.action_Colour_Map.triggered.connect(self.changeColourMap)
         self.action_Interpolation_Method.triggered.connect(self.changeInterpolationMethod)
@@ -116,9 +116,9 @@ class Main(QMainWindow, Ui_MainWindow):
         # change so that it uses extent=[xmin, xmax, ymin, ymax]
         # set default as None
         # then change here. extent added to matshow(*args, extent=[...])
-        ticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x*self.hres))
+        ticks = ticker.FuncFormatter(lambda x, pos: '{0:g}'.format(x * self.hres))
         self.ax1.xaxis.set_major_formatter(ticks)
-        ticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y*self.vres))
+        ticks = ticker.FuncFormatter(lambda y, pos: '{0:g}'.format(y * self.vres))
         self.ax1.yaxis.set_major_formatter(ticks)
         self.fig.savefig(name + '.png')
 
@@ -182,11 +182,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot()
         self.init_plot()
 
-    def ViewBore(self):
-        self.AveBoreView = self.showBvDialog()
-        self.AverageBore.setChecked(True)
-        self.BoreChecked()
-
     def Auto_Scale_plot(self):
         # autoscale cbar on plot and reset clipping if any
         self.cmapmin = None
@@ -206,8 +201,12 @@ class Main(QMainWindow, Ui_MainWindow):
             elif self.ZView.isChecked():
                 self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
-                self.im.set_ydata(
-                    self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
+                if self.BoreView == 'X':
+                    self.im.set_ydata(self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
+                elif self.BoreView == 'Y':
+                    self.im.set_ydata(self.X[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()][::])
+                elif self.BoreView == 'Z':
+                    self.im.set_ydata(self.X[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
             elif self.AverageBore.isChecked():
                 self.Scroll_Horz.setValue(self.ind)
                 self.Scroll_Vert.setValue(self.ind)
@@ -330,7 +329,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
-                                           norm=self.Normx)  # colors.LogNorm(vmin=0.1, vmax=self.X[self.ind, :, :].max())
+                                           norm=self.Normx)
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -342,7 +341,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im = self.ax1.matshow(self.X[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
-                                           norm=self.Normy)  # colors.LogNorm(vmin=0.1, vmax=self.X[:, self.ind, :].max()))
+                                           norm=self.Normy)
                 self.fig.colorbar(self.im)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
@@ -363,24 +362,35 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if b.text() == "Draw Bore":
             if b.isChecked() is True:
+                self.ViewBore()
                 self.reset_plot(False)
-                self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
+                if self.BoreView == 'X':
+                    self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
+                elif self.BoreView == 'Y':
+                    self.im, = self.ax1.plot(self.X[self.ind, :, self.ind])
+                elif self.BoreView == 'Z':
+                    self.im, = self.ax1.plot(self.X[self.ind, self.ind, :])
                 self.fig.set_tight_layout(True)
                 self.addmpl()
 
         if b.text() == "Avg. Bore":
             if b.isChecked() is True:
-                self.BoreChecked()
+                self.AveBoreChecked()
 
-    def BoreChecked(self):
-        if self.AveBoreView == 'X':
+    def ViewBore(self):
+        self.BoreView = self.showBoreViewDialog()
+        if self.BoreView == 'X':
             self.view = (1, 2)
-        elif self.AveBoreView == 'Y':
+        elif self.BoreView == 'Y':
             self.view = (0, 2)
-        elif self.AveBoreView == 'Z':
+        elif self.BoreView == 'Z':
             self.view = (0, 1)
-        self.reset_plot(False)
 
+    def AveBoreChecked(self):
+
+        self.ViewBore()
+
+        self.reset_plot(False)
         if len(self.ave) == 0:
             self.ave = np.array([])
             self.ave = np.sum(self.X, self.view)
@@ -502,7 +512,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if ok and item:
             return item
 
-    def showBvDialog(self, ):
+    def showBoreViewDialog(self, ):
         items = ("X", "Y", "Z")
         item, ok = QtGui.QInputDialog.getItem(self, "Select Average Bore Direction",
                                               "Views", items, 0, False)
@@ -517,10 +527,10 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def showextentDialog(self, ):
         hres, ok = QtGui.QInputDialog.getDouble(
-            self, 'Data Extent', 'Enter horizontal resolution:',  0, -100, 100, 9,)
+            self, 'Data Extent', 'Enter horizontal resolution:', 0, -100, 100, 9,)
         if ok:
             vres, ok = QtGui.QInputDialog.getDouble(
-                self, 'Data Extent', 'Enter vertical resolution:',  0, -100, 100, 9,)
+                self, 'Data Extent', 'Enter vertical resolution:', 0, -100, 100, 9,)
             if ok:
                 return (hres, vres)
 

@@ -134,7 +134,6 @@
       <string>Settings</string>
      </property>
      <addaction name="AutoScale"/>
-     <addaction name="Bore_View"/>
      <addaction name="action_Colour_Map"/>
      <addaction name="action_Interpolation_Method"/>
      <addaction name="action_Colour_Bar_Clip"/>
@@ -184,17 +183,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+A</string>
-   </property>
-  </action>
-  <action name="Bore_View">
-   <property name="text">
-    <string>&amp;Bore &amp;View</string>
-   </property>
-   <property name="toolTip">
-    <string>Select Bore View</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+B</string>
    </property>
   </action>
   <action name="Save_Avg_Bore">
