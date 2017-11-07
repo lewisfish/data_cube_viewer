@@ -425,7 +425,7 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
         rows, cols, self.slices = self.X.shape
-        self.ind = int(rows / 2)
+        self.ind = 1  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
             self.Scroll_Vert.setMaximum(rows)
@@ -492,13 +492,13 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def showNdimDialog(self, ):
         text1, ok1 = QtGui.QInputDialog.getInt(
-            self, 'Input Ndim', 'Enter Ndim:')
+            self, 'Input Ndim', 'Enter X Ndim:')
         if ok1:
             text2, ok2 = QtGui.QInputDialog.getInt(
-                self, 'Input Ndim', 'Enter Ndim:')
+                self, 'Input Ndim', 'Enter Y Ndim:')
             if ok2:
                 text3, ok3 = QtGui.QInputDialog.getInt(
-                    self, 'Input Ndim', 'Enter Ndim:')
+                    self, 'Input Ndim', 'Enter Z Ndim:')
                 if ok3:
                     return (text1, text2, text3)
 
