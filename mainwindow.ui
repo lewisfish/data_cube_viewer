@@ -138,6 +138,7 @@
      <addaction name="action_Interpolation_Method"/>
      <addaction name="action_Colour_Bar_Clip"/>
      <addaction name="action_Normalisation_Method"/>
+     <addaction name="action_Bore_Location"/>
     </widget>
     <addaction name="Open"/>
     <addaction name="Save_Avg_Bore"/>
@@ -239,6 +240,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="action_Bore_Location">
+   <property name="text">
+    <string>&amp;Bore Location</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
    </property>
   </action>
  </widget>

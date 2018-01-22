@@ -67,8 +67,36 @@ class Main(QMainWindow, Ui_MainWindow):
         self.action_Colour_Bar_Clip.triggered.connect(self.changeclipColourBarRange)
         self.action_Save_Image.triggered.connect(self.saveImage)
         self.action_Normalisation_Method.triggered.connect(self.changeNormMethod)
+        self.action_Bore_Location.triggered.connect(self.setBoreLocation)
 
         self.spinBox.valueChanged.connect(self.changeSpinbox)
+
+    def setBoreLocation(self, ):
+
+        xloc, ok = QtGui.QInputDialog.getInt(
+            self, 'Input location', 'Enter X location:')
+
+        yloc, ok = QtGui.QInputDialog.getInt(
+            self, 'Input location', 'Enter Y location:')
+
+        self.Scroll_Horz.setValue(xloc)
+        self.Scroll_Vert.setValue(yloc)
+
+        if self.Bore.isChecked():
+            if self.BoreView == 'X':
+                self.im.set_ydata(self.X[:, xloc, yloc][::])
+            elif self.BoreView == 'Y':
+                self.im.set_ydata(self.X[xloc, :, yloc][::])
+            elif self.BoreView == 'Z':
+                self.im.set_ydata(self.X[yloc, xloc, :][::])
+
+        # try and redraw
+        try:
+            self.im.axes.figure.canvas.draw()
+            if self.auto_flag:
+                self.im.autoscale()
+        except AttributeError:
+            pass
 
     def changeNormMethod(self, ):
         # func to change Normalisation method of matshow
@@ -134,6 +162,8 @@ class Main(QMainWindow, Ui_MainWindow):
             self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
         except TypeError:
             pass
+        # self.cmapmax = int(.5e12)
+        # self.cmapmin = 0#int(self.cmapmin)
         self.reset_plot(False)
         self.init_plot()
 
@@ -202,8 +232,10 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
                 if self.BoreView == 'X':
+                    print(self.Scroll_Vert.value(), self.Scroll_Horz.value())
                     self.im.set_ydata(self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
                 elif self.BoreView == 'Y':
+                    print(self.Scroll_Horz.value(), self.Scroll_Vert.value())
                     self.im.set_ydata(self.X[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()][::])
                 elif self.BoreView == 'Z':
                     self.im.set_ydata(self.X[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
@@ -212,7 +244,6 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.Scroll_Vert.setValue(self.ind)
         except IndexError:
             pass
-
         # try and redraw
         try:
             self.im.axes.figure.canvas.draw()
@@ -248,7 +279,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(self.ave[i]) + '\n')
             f.close()
         else:
-            tmp = self.X[:, self.Scroll_Horz.value() - 1, self.Scroll_Vert.value() - 1]
+            print(self.Scroll_Horz.value(), self.Scroll_Vert.value())
+            tmp = self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()]
             for i in range(len(tmp)):
                 f.write(str(tmp[i]) + '\n')
 
@@ -425,24 +457,28 @@ class Main(QMainWindow, Ui_MainWindow):
             pass
 
         rows, cols, self.slices = self.X.shape
-        self.ind = 1  # int(rows / 2)
+        print(rows, cols, self.slices)
+        self.ind = 0  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
             self.Scroll_Vert.setMaximum(rows)
+            self.Scroll_Horz.setMaximum(rows)
         elif self.YView.isChecked():
             view = self.YView
             self.Scroll_Vert.setMaximum(cols)
+            self.Scroll_Horz.setMaximum(cols)
         elif self.ZView.isChecked():
             view = self.ZView
             self.Scroll_Vert.setMaximum(self.slices)
+            self.Scroll_Horz.setMaximum(cols)
         elif self.AverageBore.isChecked():
             view = self.AverageBore
-            self.Scroll_Vert.setMaximum(self.slices)
+            self.Scroll_Vert.setMaximum(rows)
         elif self.Bore_View.isChecked():
             view = self.ViewBore
-            self.Scroll_Vert.setMaximum(self.slices)
+            self.Scroll_Vert.setMaximum(cols)
+            self.Scroll_Horz.setMaximum(rows)
         self.btnstate(view)
-        self.Scroll_Horz.setMaximum(self.slices)
         self.Scroll_Horz.setValue(self.ind)
         self.Scroll_Vert.setValue(self.ind)
 
@@ -572,10 +608,10 @@ class Main(QMainWindow, Ui_MainWindow):
             return item
 
     def showclipColourBarDialog(self, ):
-        text1, ok1 = QtGui.QInputDialog.getInt(
+        text1, ok1 = QtGui.QInputDialog.getDouble(
             self, 'Input cbar min', 'Enter min:')
         if ok1:
-            text2, ok2 = QtGui.QInputDialog.getInt(
+            text2, ok2 = QtGui.QInputDialog.getDouble(
                 self, 'Input cbar max', 'Enter max:')
             if ok2:
                 return (int(text1), int(text2))
