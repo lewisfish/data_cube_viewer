@@ -203,6 +203,7 @@ class Main(QMainWindow, Ui_MainWindow):
         # use imagemagick to create gif
         os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
         os.system('rm pic*.png')
+        print('done')
 
     def changeSpinbox(self):
         # for 4d data cubes
@@ -232,10 +233,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
             elif self.Bore.isChecked():
                 if self.BoreView == 'X':
-                    print(self.Scroll_Vert.value(), self.Scroll_Horz.value())
                     self.im.set_ydata(self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
                 elif self.BoreView == 'Y':
-                    print(self.Scroll_Horz.value(), self.Scroll_Vert.value())
                     self.im.set_ydata(self.X[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()][::])
                 elif self.BoreView == 'Z':
                     self.im.set_ydata(self.X[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
