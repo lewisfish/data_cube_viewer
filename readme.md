@@ -24,6 +24,7 @@ Ability to change colour map of plot, clip colourbar, interpolation method and t
 ## Requires
 
 Matplotlib >= 1.5
+
 PyQt4
 
 #### ToDo
