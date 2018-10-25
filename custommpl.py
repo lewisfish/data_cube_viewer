@@ -53,9 +53,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.Scroll_Horz.sliderMoved.connect(self.sliderval)
         self.Scroll_Vert.sliderMoved.connect(self.sliderval)
 
-        if len(sys.argv) >= 2:
-            # open file dialog if no file provided on cmd line
-            self.file_open(sys.argv[1:4])
+        self.file_open(args)
         self.Open.triggered.connect(self.file_open)
         self.Save_Avg_Bore.triggered.connect(self.saveBore)
         self.Reset.triggered.connect(self.reset_plot)
@@ -162,8 +160,6 @@ class Main(QMainWindow, Ui_MainWindow):
             self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
         except TypeError:
             pass
-        # self.cmapmax = int(.5e12)
-        # self.cmapmin = 0#int(self.cmapmin)
         self.reset_plot(False)
         self.init_plot()
 
@@ -174,7 +170,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.init_plot()
 
     def is_perfect_cube(self, x):
-        # shitty cheat so i dont have to enter numbers...
+        # shitty cheat so i dont have to enter numbers... sometimes dosent work
         x = abs(x)
         p = x ** (1. / 3)
         if int(round(p)) ** 3 == x:
@@ -283,63 +279,45 @@ class Main(QMainWindow, Ui_MainWindow):
             for i in range(len(tmp)):
                 f.write(str(tmp[i]) + '\n')
 
-    def file_open(self, *args):
+    def file_open(self, args):
         try:
             self.reset_plot()
         except:
             pass
-        if args[0]:
-            args = args[0]
-            self.name = args[0]
-            if len(args) == 2:
-                ndim = (args[1], args[1], args[1])
 
-                item = str(self.showDtDialog())
-
-            elif len(args) == 3:
-                ndim = (args[1], args[1], args[1])
-                item = args[2]
-
-                if int(item) == 1:
-                    item = str("4 dim Real*4")
-                elif int(item) == 2:
-                    item = str("4 dim Real*8")
-                elif int(item) == 3:
-                    item = "3 dim Real*4"
-                elif int(item) == 4:
-                    item = "3 dim Real*8"
-            else:
-                item = str(self.showDtDialog())
-                size = os.path.getsize(self.name)
-                if "Real*8" in item:
-                    if size % 8 == 0:
-                        size /= 8
-                elif "Real*4" in item:
-                    if size % 4 == 0:
-                        size /= 4
-                # bug here. can be perfect cube, but not correct cube dims...
-                if self.is_perfect_cube(size) != 0:
-                    size = self.is_perfect_cube(size)
-                    ndim = (size, size, size)
-                else:
-                    ndim = self.showNdimDialog()
-
-            args = None
-        else:
+        if args.file is None:
             self.name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
+        else:
+            self.name = args.file
+        if args.ndim is None:
             ndim = self.showNdimDialog()
+        else:
+            ndim = (args.ndim, args.ndim, args.ndim)
+        if args.fpprec is None:
             item = str(self.showDtDialog())
+            if "Real*8" in item:
+                dt = np.float64
+            elif "Real*4" in item:
+                dt = np.float32
 
-        if "Real*8" in item:
-            dt = np.float64
-        elif "Real*4" in item:
-            dt = np.float32
-
-        if "4 dim" in item:
-            dim = 4
-            self.spinBox.show()
-        elif "3 dim" in item:
-            dim = 3
+            if "4 dim" in item:
+                dim = 4
+                self.spinBox.show()
+            elif "3 dim" in item:
+                dim = 3
+        else:
+            if args.fpprec == 1:
+                dt = np.float32
+                dim = 4
+            elif args.fpprec == 2:
+                dt = np.float64
+                dim = 4
+            elif args.fpprec == 3:
+                dt = np.float32
+                dim = 3
+            elif args.fpprec == 4:
+                dt = np.float64
+                dim = 3
 
         try:
             fd = open(self.name, 'rb')
@@ -520,9 +498,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if ok and text:
             if items == "Colour Bar":
-                text = False
-            else:
                 text = True
+            else:
+                text = False
             return text
 
     def showNdimDialog(self, ):
@@ -623,37 +601,22 @@ if __name__ == '__main__':
     import sys
     from PyQt4 import QtGui
     import numpy as np
+    from argparse import ArgumentParser
 
-    if len(sys.argv) >= 2:
-        if 'help' in str(sys.argv[1]) or str(sys.argv[1]) == '-h':
-            print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
+    parser = ArgumentParser()
+    parser.add_argument("-f", "--file", type=str,
+                        help="Name of file to be plotted.")
+    parser.add_argument("-n", "--ndim", type=int,
+                        help="Gives the dimensions of the data cube to be examined.")
+    parser.add_argument("-d", "--fpprec", type=int, choices=[1, 2, 3, 4],
+                        help="Gives choice of (1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8.")
 
-            print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
-            print(
-                'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
-            print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
-            sys.exit(0)
-
-        elif len(sys.argv) < 3 and len(sys.argv) > 2:
-            print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
-
-            print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
-            print(
-                'FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
-            print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
-            sys.exit(0)
-    else:
-        print('\nUsage: d3v [FILE] [NDIM] [FP_REP+DIM](1-4)')
-
-        print('\nNDIM, \t    gives the dimensions of the data cube to be examined')
-        print('FP_REP+DIM, gives choice of(1-4):\n\n\t4 dim Real*4, 4 dim Real*8, 3 dim Real*4, 3 dim Real*8')
-        print('\t    (1)\t\t  (2)\t\t(3)\t      (4)\n')
-        sys.exit(0)
+    args = parser.parse_args()
 
     fig = Figure()
     ax = fig.add_subplot(111)
 
-    app = QtGui.QApplication(sys.argv)
+    app = QtGui.QApplication([])
     main = Main()
     main.show()
     sys.exit(app.exec_())
