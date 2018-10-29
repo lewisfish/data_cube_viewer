@@ -289,10 +289,7 @@ class Main(QMainWindow, Ui_MainWindow):
             self.name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
         else:
             self.name = args.file
-        if args.ndim is None:
-            ndim = self.showNdimDialog()
-        else:
-            ndim = (args.ndim, args.ndim, args.ndim)
+
         if args.fpprec is None:
             item = str(self.showDtDialog())
             if "Real*8" in item:
@@ -318,6 +315,20 @@ class Main(QMainWindow, Ui_MainWindow):
             elif args.fpprec == 4:
                 dt = np.float64
                 dim = 3
+
+        if args.ndim is None:
+            size = os.path.getsize(self.name)
+            if "Real*8" in item:
+                size /= 8
+            elif "Real*4" in item:
+                size /= 4
+            if self.is_perfect_cube(size) != 0:
+                size = self.is_perfect_cube(size)
+                ndim = (size, size, size)
+            else:
+                ndim = self.showNdimDialog()
+        else:
+            ndim = (args.ndim, args.ndim, args.ndim)
 
         try:
             fd = open(self.name, 'rb')
