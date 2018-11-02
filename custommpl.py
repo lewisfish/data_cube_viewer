@@ -274,8 +274,13 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(self.ave[i]) + '\n')
             f.close()
         else:
-            print(self.Scroll_Horz.value(), self.Scroll_Vert.value())
-            tmp = self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()]
+            if self.BoreView == "X":
+                tmp = self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()]
+            elif self.BoreView == "Y":
+                tmp = self.X[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()]
+            elif self.BoreView == "Z":
+                tmp = self.X[self.Scroll_Horz.value(), self.Scroll_Vert.value(), :]
+
             for i in range(len(tmp)):
                 f.write(str(tmp[i]) + '\n')
 
@@ -285,11 +290,13 @@ class Main(QMainWindow, Ui_MainWindow):
         except:
             pass
 
+        # get file name
         if args.file is None:
             self.name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
         else:
             self.name = args.file
 
+        # get precision of data cube
         if args.fpprec is None:
             item = str(self.showDtDialog())
             if "Real*8" in item:
@@ -316,6 +323,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 dt = np.float64
                 dim = 3
 
+        # get dimensions of data cube. can be guessed
         if args.ndim is None:
             size = os.path.getsize(self.name)
             if "Real*8" in item:
