@@ -193,12 +193,14 @@ class Main(QMainWindow, Ui_MainWindow):
             self.sliderval()
             if tight:
                 extent = self.ax1.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-                self.fig.savefig('pic' + str(i) + '.png', bbox_inches=extent)
+                self.fig.savefig(str(i).zfill(3) + 'pic.png', bbox_inches=extent)
             else:
-                self.fig.savefig('pic' + str(i) + '.png')
-        # use imagemagick to create gif
-        os.system('convert -delay 20 $(ls pic*.png -v) ' + name + '.gif')
-        os.system('rm pic*.png')
+                self.fig.savefig(str(i).zfill(3) + 'pic.png')
+        # use ffmpeg to create gif
+        if tight:
+            os.system("mogrify -trim *pic.png")
+        os.system("ffmpeg -framerate 10 -pattern_type glob -i '*pic.png' -c:v libx264 -r 24 -pix_fmt yuv420p -vf 'pad=ceil(iw/2)*2:ceil(ih/2)*2' " + name + ".mp4")
+        os.system('rm *pic.png')
         print('done')
 
     def changeSpinbox(self):
