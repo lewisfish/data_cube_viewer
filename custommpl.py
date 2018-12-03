@@ -519,9 +519,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if ok and text:
             if items == "Colour Bar":
-                text = True
-            else:
                 text = False
+            else:
+                text = True
             return text
 
     def showNdimDialog(self, ):
