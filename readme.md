@@ -27,6 +27,8 @@ Matplotlib >= 1.5
 
 PyQt4
 
+ffmpeg >= 2.8.15 (only need for creating videos of moving though datacube)
+
 #### ToDo
 
   - [ ] Fix bugs(memory leak??)
