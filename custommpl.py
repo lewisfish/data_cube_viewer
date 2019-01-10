@@ -356,6 +356,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "X View":
             if b.isChecked() is True:
                 self.reset_plot(False)
+                self.Scroll_Vert.setMaximum(self.rows)
                 self.im = self.ax1.matshow(self.X[self.ind, :, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
@@ -368,6 +369,7 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Y View":
             if b.isChecked() is True:
                 self.reset_plot(False)
+                self.Scroll_Vert.setMaximum(self.cols)
                 self.im = self.ax1.matshow(self.X[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
@@ -454,28 +456,28 @@ class Main(QMainWindow, Ui_MainWindow):
         except:
             pass
 
-        rows, cols, self.slices = self.X.shape
-        print(rows, cols, self.slices)
+        self.rows, self.cols, self.slices = self.X.shape
+        print(self.rows, self.cols, self.slices)
         self.ind = 0  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
-            self.Scroll_Vert.setMaximum(rows)
-            self.Scroll_Horz.setMaximum(rows)
+            self.Scroll_Vert.setMaximum(self.rows)
+            self.Scroll_Horz.setMaximum(self.rows)
         elif self.YView.isChecked():
             view = self.YView
-            self.Scroll_Vert.setMaximum(cols)
-            self.Scroll_Horz.setMaximum(cols)
+            self.Scroll_Vert.setMaximum(self.cols)
+            self.Scroll_Horz.setMaximum(self.cols)
         elif self.ZView.isChecked():
             view = self.ZView
             self.Scroll_Vert.setMaximum(self.slices)
-            self.Scroll_Horz.setMaximum(cols)
+            self.Scroll_Horz.setMaximum(self.cols)
         elif self.AverageBore.isChecked():
             view = self.AverageBore
-            self.Scroll_Vert.setMaximum(rows)
+            self.Scroll_Vert.setMaximum(self.rows)
         elif self.Bore_View.isChecked():
             view = self.ViewBore
-            self.Scroll_Vert.setMaximum(cols)
-            self.Scroll_Horz.setMaximum(rows)
+            self.Scroll_Vert.setMaximum(self.cols)
+            self.Scroll_Horz.setMaximum(self.rows)
         self.btnstate(view)
         self.Scroll_Horz.setValue(self.ind)
         self.Scroll_Vert.setValue(self.ind)
