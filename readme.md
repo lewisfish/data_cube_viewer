@@ -23,15 +23,18 @@ Ability to change colour map of plot, clip colourbar, interpolation method and t
 
 ## Requires
 
+Python >= 3.5
 Matplotlib >= 1.5
+PyQt5
 
-PyQt4
-
-ffmpeg >= 2.8.15 (only need for creating videos of moving though datacube)
+For gif/video making need:
+ImageMagick >= 6.7.7-10
+ffmpeg >= 2.8.15 
 
 #### ToDo
 
-  - [ ] Fix bugs(memory leak??)
+  - [ ] Fix bugs
+  - [x] Fixed memory leak
   - [ ] Ability to open any fortran unformmated binary file
   - [x] Controlable colorbars(partially done with autoscale)
   - [x] Save data from whats on screen(partially done with gif making and saving of boreholes)
