@@ -1,5 +1,5 @@
-#!/usr/bin/python
-from PyQt4.uic import loadUiType
+#!/home/lewis/anaconda3/bin/python
+from PyQt5.uic import loadUiType
 
 import gc
 import os
@@ -20,6 +20,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def __init__(self, ):
         super(Main, self).__init__()
         self.setupUi(self)
+
         self.showMaximized()
         self.ave = np.array([])         # empty array for average bore
         self.auto_flag = False          # autoscale flag
@@ -50,8 +51,8 @@ class Main(QMainWindow, Ui_MainWindow):
             lambda: self.btnstate(self.AverageBore))
 
         # update data when slider moved
-        self.Scroll_Horz.sliderMoved.connect(self.sliderval)
-        self.Scroll_Vert.sliderMoved.connect(self.sliderval)
+        self.Scroll_Horz.valueChanged[int].connect(self.sliderval)
+        self.Scroll_Vert.valueChanged[int].connect(self.sliderval)
 
         self.file_open(args)
         self.Open.triggered.connect(self.file_open)
@@ -71,10 +72,10 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def setBoreLocation(self, ):
 
-        xloc, ok = QtGui.QInputDialog.getInt(
+        xloc, ok = QtWidgets.QInputDialog.getInt(
             self, 'Input location', 'Enter X location:')
 
-        yloc, ok = QtGui.QInputDialog.getInt(
+        yloc, ok = QtWidgets.QInputDialog.getInt(
             self, 'Input location', 'Enter Y location:')
 
         self.Scroll_Horz.setValue(xloc)
@@ -156,10 +157,9 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def changeclipColourBarRange(self, ):
         # change vmin, vmax for cbar
-        try:
-            self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
-        except TypeError:
-            pass
+
+        self.cmapmin, self.cmapmax = self.showclipColourBarDialog()
+
         self.reset_plot(False)
         self.init_plot()
 
@@ -222,25 +222,35 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def sliderval(self):
         # move slider and update data
-        try:
-            if self.XView.isChecked():
-                self.im.set_data(self.X[self.Scroll_Vert.value(), :, :])
-            elif self.YView.isChecked():
-                self.im.set_data(self.X[:, self.Scroll_Vert.value(), :])
-            elif self.ZView.isChecked():
-                self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
-            elif self.Bore.isChecked():
-                if self.BoreView == 'X':
-                    self.im.set_ydata(self.X[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
-                elif self.BoreView == 'Y':
-                    self.im.set_ydata(self.X[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()][::])
-                elif self.BoreView == 'Z':
-                    self.im.set_ydata(self.X[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
-            elif self.AverageBore.isChecked():
-                self.Scroll_Horz.setValue(self.ind)
-                self.Scroll_Vert.setValue(self.ind)
-        except IndexError:
-            pass
+        if self.XView.isChecked():
+            self.im.set_data(self.X[self.Scroll_Vert.value(), :, :])
+            self.Scroll_Horz.setValue(0)  # pin unsed slider
+        elif self.YView.isChecked():
+            self.im.set_data(self.X[:, self.Scroll_Vert.value(), :])
+            self.Scroll_Horz.setValue(0)  # pin unsed slider
+        elif self.ZView.isChecked():
+            self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
+            self.Scroll_Horz.setValue(0)  # pin unsed slider
+        elif self.Bore.isChecked():
+            if self.BoreView == 'X':
+                self.im.set_ydata(self.X[:, self.Scroll_Horz.value() - 1, self.Scroll_Vert.value() - 1][::])
+                if self.auto_flag:
+                    self.ax1.relim()
+                    self.ax1.autoscale_view(True, True, True)
+            elif self.BoreView == 'Y':
+                self.im.set_ydata(self.X[self.Scroll_Horz.value() - 1, :, self.Scroll_Vert.value() - 1][::])
+                if self.auto_flag:
+                    self.ax1.relim()
+                    self.ax1.autoscale_view(True, True, True)
+            elif self.BoreView == 'Z':
+                self.im.set_ydata(self.X[self.Scroll_Vert.value() - 1, self.Scroll_Horz.value() - 1, :][::])
+                if self.auto_flag:
+                    self.ax1.relim()
+                    self.ax1.autoscale_view(True, True, True)
+        elif self.AverageBore.isChecked():
+            self.Scroll_Horz.setValue(self.ind)
+            self.Scroll_Vert.setValue(self.ind)
+
         # try and redraw
         try:
             self.im.axes.figure.canvas.draw()
@@ -251,6 +261,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def addmpl(self):
         # add plot to anvas
+        self.rmmpl()
         self.canvas = FigureCanvas(self.fig)
         self.mplvl.addWidget(self.canvas)
         self.canvas.draw()
@@ -260,16 +271,19 @@ class Main(QMainWindow, Ui_MainWindow):
     def rmmpl(self):
         # delete plot from canvas
         try:
-            self.mplvl.removeWidget(self.canvas)
+            # self.mplvl.removeWidget(self.canvas)
             self.canvas.close()
-            self.mplvl.removeWidget(self.toolbar)
+            self.canvas.deleteLater()
+            # self.mplvl.removeWidget(self.toolbar)
             self.toolbar.close()
+            self.toolbar.deleteLater()
+            gc.collect()
         except:
             pass
 
     def saveBore(self,):
         # save bore as a list of points
-        name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        name = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File')
         f = open(name, 'w')
         if len(self.ave) > 1:
             for i in range(len(self.ave)):
@@ -294,7 +308,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # get file name
         if args.file is None:
-            self.name = QtGui.QFileDialog.getOpenFileName(self, 'Open File')
+            self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
         else:
             self.name = args.file
 
@@ -327,7 +341,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # get dimensions of data cube. can be guessed
         if args.ndim is None:
-            size = os.path.getsize(self.name)
+            size = os.path.getsize(self.name[0])
             if "Real*8" in item:
                 size /= 8
             elif "Real*4" in item:
@@ -340,10 +354,8 @@ class Main(QMainWindow, Ui_MainWindow):
         else:
             ndim = (args.ndim, args.ndim, args.ndim)
 
-        try:
-            fd = open(self.name, 'rb')
-        except IOError:
-            pass
+        fd = open(self.name, 'rb')
+
         try:
             self.readslice(fd, int(ndim[0]), int(
                 ndim[1]), int(ndim[2]), dt, dim)
@@ -441,23 +453,13 @@ class Main(QMainWindow, Ui_MainWindow):
 
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
-        try:
-            self.fig.delaxes(self.fig.axes[1])
-            self.figure.subplot_adjust(right=0.90)
-        except IndexError:
-            pass
-        except AttributeError:
-            pass
         self.rmmpl()
 
     def init_plot(self, ):
-        try:
-            self.rmmpl()
-        except:
-            pass
+
+        self.rmmpl()
 
         self.rows, self.cols, self.slices = self.X.shape
-        print(self.rows, self.cols, self.slices)
         self.ind = 0  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
@@ -484,16 +486,11 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def readslice(self, fd, dimx, dimy, dimz, dt, dim):
         if dim == 4:
-            if dt == np.float64:
-                # !this sometimes needs changed try powers of 2...
-                magic = 4
-            elif dt == np.float32:
-                magic = 4
+            magic = 4
             shape = (dimx, dimy, dimz, magic)
         elif dim == 3:
             shape = (dimx, dimy, dimz)
-        data = np.fromfile(
-            file=fd, dtype=dt, sep="")
+        data = np.fromfile(file=fd, dtype=dt, sep="")
         data = data.reshape(shape, order='F')
         fd.close()
         if dim == 4:
@@ -502,13 +499,13 @@ class Main(QMainWindow, Ui_MainWindow):
         del data
 
     def showGifframesDialog(self, ):
-        text, ok = QtGui.QInputDialog.getInt(
+        text, ok = QtWidgets.QInputDialog.getInt(
             self, '# of frames', 'Enter # of frames:')
         if ok:
             return(text)
 
     def showGifstepDialog(self, ):
-        text, ok = QtGui.QInputDialog.getInt(
+        text, ok = QtWidgets.QInputDialog.getInt(
             self, 'Step size', 'Enter value of step:')
         if ok:
             return(text)
@@ -516,7 +513,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def showGifExtent(self, ):
         items = ("Colour Bar", "No Colour Bar")
 
-        text, ok = QtGui.QInputDialog.getItem(
+        text, ok = QtWidgets.QInputDialog.getItem(
             self, "Colour Bar on GIF?", " ", items, 0, False)
 
         if ok and text:
@@ -527,13 +524,13 @@ class Main(QMainWindow, Ui_MainWindow):
             return text
 
     def showNdimDialog(self, ):
-        text1, ok1 = QtGui.QInputDialog.getInt(
+        text1, ok1 = QtWidgets.QInputDialog.getInt(
             self, 'Input Ndim', 'Enter X Ndim:')
         if ok1:
-            text2, ok2 = QtGui.QInputDialog.getInt(
+            text2, ok2 = QtWidgets.QInputDialog.getInt(
                 self, 'Input Ndim', 'Enter Y Ndim:')
             if ok2:
-                text3, ok3 = QtGui.QInputDialog.getInt(
+                text3, ok3 = QtWidgets.QInputDialog.getInt(
                     self, 'Input Ndim', 'Enter Z Ndim:')
                 if ok3:
                     return (text1, text2, text3)
@@ -542,7 +539,7 @@ class Main(QMainWindow, Ui_MainWindow):
         items = ("4 dim Real*4", "4 dim Real*8",
                  "3 dim Real*4", "3 dim Real*8")
 
-        item, ok = QtGui.QInputDialog.getItem(self, "Select Fortran Precision",
+        item, ok = QtWidgets.QInputDialog.getItem(self, "Select Fortran Precision",
                                               "Precisions", items, 0, False)
 
         if ok and item:
@@ -550,22 +547,22 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def showBoreViewDialog(self, ):
         items = ("X", "Y", "Z")
-        item, ok = QtGui.QInputDialog.getItem(self, "Select Average Bore Direction",
+        item, ok = QtWidgets.QInputDialog.getItem(self, "Select Average Bore Direction",
                                               "Views", items, 0, False)
         if ok and item:
             return item
 
     def showGifDialog(self, ):
-        text, ok = QtGui.QInputDialog.getText(
+        text, ok = QtWidgets.QInputDialog.getText(
             self, 'Filename Dialog', 'Enter filename:')
         if ok:
             return str(text)
 
     def showextentDialog(self, ):
-        hres, ok = QtGui.QInputDialog.getDouble(
+        hres, ok = QtWidgets.QInputDialog.getDouble(
             self, 'Data Extent', 'Enter horizontal resolution:', 0, -100, 100, 9,)
         if ok:
-            vres, ok = QtGui.QInputDialog.getDouble(
+            vres, ok = QtWidgets.QInputDialog.getDouble(
                 self, 'Data Extent', 'Enter vertical resolution:', 0, -100, 100, 9,)
             if ok:
                 return (hres, vres)
@@ -573,7 +570,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def getNormDialog(self, ):
         items = ("Log", "Linear", "Symmetric Log")
 
-        item, ok = QtGui.QInputDialog.getItem(self, "Select cbar normalisation method",
+        item, ok = QtWidgets.QInputDialog.getItem(self, "Select cbar normalisation method",
                                               "Method:", items, 0, False)
         if ok and item:
             return item
@@ -592,7 +589,7 @@ class Main(QMainWindow, Ui_MainWindow):
                  'brg', 'CMRmap', 'cubehelix', 'gnuplot', 'gnuplot2',
                  'gist_ncar', 'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow',
                  'hsv', 'flag', 'prism')
-        item, ok = QtGui.QInputDialog.getItem(self, "Select Colour Map",
+        item, ok = QtWidgets.QInputDialog.getItem(self, "Select Colour Map",
                                               "Cmaps", items, 0, False)
         if ok and item:
             return item
@@ -602,27 +599,27 @@ class Main(QMainWindow, Ui_MainWindow):
                  'spline36', 'hanning', 'hamming', 'hermite', 'kaiser',
                  'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
                  'sinc', 'lanczos')
-        item, ok = QtGui.QInputDialog.getItem(self, "Select Interpolation Method",
+        item, ok = QtWidgets.QInputDialog.getItem(self, "Select Interpolation Method",
                                               "Methods", items, 0, False)
         if ok and item:
             return item
 
     def showclipColourBarDialog(self, ):
-        text1, ok1 = QtGui.QInputDialog.getDouble(
+        text1, ok1 = QtWidgets.QInputDialog.getDouble(
             self, 'Input cbar min', 'Enter min:')
         if ok1:
-            text2, ok2 = QtGui.QInputDialog.getDouble(
+            text2, ok2 = QtWidgets.QInputDialog.getDouble(
                 self, 'Input cbar max', 'Enter max:')
             if ok2:
                 return (int(text1), int(text2))
 
     def ErrorDialog(self, ErrMsg):
-        QtGui.QMessageBox.warning(self, "Error", ErrMsg)
+        QtWidgets.QMessageBox.warning(self, "Error", ErrMsg)
 
 
 if __name__ == '__main__':
     import sys
-    from PyQt4 import QtGui
+    from PyQt5 import QtCore, QtWidgets, QtGui
     import numpy as np
     from argparse import ArgumentParser
 
@@ -639,7 +636,7 @@ if __name__ == '__main__':
     fig = Figure()
     ax = fig.add_subplot(111)
 
-    app = QtGui.QApplication([])
+    app = QtWidgets.QApplication([])
     main = Main()
     main.show()
     sys.exit(app.exec_())
