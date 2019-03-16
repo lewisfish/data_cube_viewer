@@ -24,11 +24,15 @@ Ability to change colour map of plot, clip colourbar, interpolation method and t
 ## Requires
 
 Python >= 3.5
+
 Matplotlib >= 1.5
+
 PyQt5
 
 For gif/video making need:
+
 ImageMagick >= 6.7.7-10
+
 ffmpeg >= 2.8.15 
 
 #### ToDo
