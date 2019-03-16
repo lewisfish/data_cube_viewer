@@ -7,7 +7,7 @@ import os
 from matplotlib.figure import Figure
 import matplotlib.ticker as ticker
 import matplotlib.colors as colors
-from matplotlib.backends.backend_qt4agg import (
+from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 
@@ -271,10 +271,8 @@ class Main(QMainWindow, Ui_MainWindow):
     def rmmpl(self):
         # delete plot from canvas
         try:
-            # self.mplvl.removeWidget(self.canvas)
             self.canvas.close()
             self.canvas.deleteLater()
-            # self.mplvl.removeWidget(self.toolbar)
             self.toolbar.close()
             self.toolbar.deleteLater()
             gc.collect()
@@ -341,7 +339,7 @@ class Main(QMainWindow, Ui_MainWindow):
 
         # get dimensions of data cube. can be guessed
         if args.ndim is None:
-            size = os.path.getsize(self.name[0])
+            size = os.path.getsize(self.name)
             if "Real*8" in item:
                 size /= 8
             elif "Real*4" in item:
@@ -540,7 +538,7 @@ class Main(QMainWindow, Ui_MainWindow):
                  "3 dim Real*4", "3 dim Real*8")
 
         item, ok = QtWidgets.QInputDialog.getItem(self, "Select Fortran Precision",
-                                              "Precisions", items, 0, False)
+                                                  "Precisions", items, 0, False)
 
         if ok and item:
             return item
@@ -548,7 +546,7 @@ class Main(QMainWindow, Ui_MainWindow):
     def showBoreViewDialog(self, ):
         items = ("X", "Y", "Z")
         item, ok = QtWidgets.QInputDialog.getItem(self, "Select Average Bore Direction",
-                                              "Views", items, 0, False)
+                                                  "Views", items, 0, False)
         if ok and item:
             return item
 
@@ -571,7 +569,7 @@ class Main(QMainWindow, Ui_MainWindow):
         items = ("Log", "Linear", "Symmetric Log")
 
         item, ok = QtWidgets.QInputDialog.getItem(self, "Select cbar normalisation method",
-                                              "Method:", items, 0, False)
+                                                  "Method:", items, 0, False)
         if ok and item:
             return item
 
@@ -590,7 +588,7 @@ class Main(QMainWindow, Ui_MainWindow):
                  'gist_ncar', 'nipy_spectral', 'jet', 'rainbow', 'gist_rainbow',
                  'hsv', 'flag', 'prism')
         item, ok = QtWidgets.QInputDialog.getItem(self, "Select Colour Map",
-                                              "Cmaps", items, 0, False)
+                                                  "Cmaps", items, 0, False)
         if ok and item:
             return item
 
@@ -600,7 +598,7 @@ class Main(QMainWindow, Ui_MainWindow):
                  'quadric', 'catrom', 'gaussian', 'bessel', 'mitchell',
                  'sinc', 'lanczos')
         item, ok = QtWidgets.QInputDialog.getItem(self, "Select Interpolation Method",
-                                              "Methods", items, 0, False)
+                                                  "Methods", items, 0, False)
         if ok and item:
             return item
 
