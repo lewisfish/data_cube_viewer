@@ -223,13 +223,13 @@ class Main(QMainWindow, Ui_MainWindow):
     def sliderval(self):
         # move slider and update data
         if self.XView.isChecked():
-            self.im.set_data(self.X[self.Scroll_Vert.value(), :, :])
+            self.im.set_data(self.X[self.Scroll_Vert.value() - 1, :, :])
             self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.YView.isChecked():
-            self.im.set_data(self.X[:, self.Scroll_Vert.value(), :])
+            self.im.set_data(self.X[:, self.Scroll_Vert.value() - 1, :])
             self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.ZView.isChecked():
-            self.im.set_data(self.X[:, :, self.Scroll_Vert.value()])
+            self.im.set_data(self.X[:, :, self.Scroll_Vert.value() - 1])
             self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.Bore.isChecked():
             if self.BoreView == 'X':
@@ -299,18 +299,52 @@ class Main(QMainWindow, Ui_MainWindow):
                 f.write(str(tmp[i]) + '\n')
 
     def file_open(self, args):
-        try:
-            self.reset_plot()
-        except:
-            pass
 
-        # get file name
-        if args.file is None:
-            self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+        self.reset_plot()
+
+        while True:
+            try:
+                # get file name
+                if args.file is None:
+                    self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+                else:
+                    self.name = args.file
+
+                # get precision of data cube
+                dt, dim, item = self.getPrec(args)
+
+                # get dimensions of data cube. can be guessed
+                ndim = self.getSize(args, item)
+
+                fd = open(self.name, 'rb')
+
+                self.readslice(fd, int(ndim[0]), int(
+                    ndim[1]), int(ndim[2]), dt, dim)
+                self.init_plot()
+                break
+            except ValueError:
+                self.ErrorDialog("Value of Ndim incorrect for this data cube.")
+
+    def getSize(self, args, item):
+        if args.ndim is None and item:
+            size = os.path.getsize(self.name)
+            if "Real*8" in item:
+                size /= 8
+            elif "Real*4" in item:
+                size /= 4
+            if self.is_perfect_cube(size) != 0:
+                size = self.is_perfect_cube(size)
+                ndim = (size, size, size)
+            else:
+                ndim = self.showNdimDialog()
         else:
-            self.name = args.file
+            ndim = (args.ndim, args.ndim, args.ndim)
 
+        return ndim
+
+    def getPrec(self, args):
         # get precision of data cube
+        item = None
         if args.fpprec is None:
             item = str(self.showDtDialog())
             if "Real*8" in item:
@@ -336,30 +370,7 @@ class Main(QMainWindow, Ui_MainWindow):
             elif args.fpprec == 4:
                 dt = np.float64
                 dim = 3
-
-        # get dimensions of data cube. can be guessed
-        if args.ndim is None:
-            size = os.path.getsize(self.name)
-            if "Real*8" in item:
-                size /= 8
-            elif "Real*4" in item:
-                size /= 4
-            if self.is_perfect_cube(size) != 0:
-                size = self.is_perfect_cube(size)
-                ndim = (size, size, size)
-            else:
-                ndim = self.showNdimDialog()
-        else:
-            ndim = (args.ndim, args.ndim, args.ndim)
-
-        fd = open(self.name, 'rb')
-
-        try:
-            self.readslice(fd, int(ndim[0]), int(
-                ndim[1]), int(ndim[2]), dt, dim)
-            self.init_plot()
-        except ValueError:
-            self.ErrorDialog("Value of Ndim incorrect for this data cube.")
+        return dt, dim, item
 
     def btnstate(self, b):
 
@@ -397,7 +408,16 @@ class Main(QMainWindow, Ui_MainWindow):
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
                                            norm=self.Normz)
-                self.fig.colorbar(self.im)
+                try:
+                    self.fig.colorbar(self.im)
+                except ZeroDivisionError:
+                    self.ErrorDialog("Divison by zero, try another range")
+                    self.Normz = None
+                    self.Normy = None
+                    self.Normz = None
+                    self.cmapmin = None
+                    self.cmapmax = None
+                    self.btnstate(b)
                 self.fig.set_tight_layout(True)
                 self.ax1.set_aspect('auto')
                 self.addmpl()
