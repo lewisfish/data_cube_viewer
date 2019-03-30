@@ -4,6 +4,8 @@ from PyQt5.uic import loadUiType
 import gc
 import os
 
+from cubeclass import datacube
+
 from matplotlib.figure import Figure
 import matplotlib.ticker as ticker
 import matplotlib.colors as colors
@@ -39,7 +41,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.XView.setChecked(True)
         self.fig = Figure()
         self.ax1 = self.fig.add_subplot(111)
-        self.X = np.array([])
+        self.X = datacube()
         self.AveBoreView = 'X'
 
         # change view of cube
@@ -83,11 +85,11 @@ class Main(QMainWindow, Ui_MainWindow):
 
         if self.Bore.isChecked():
             if self.BoreView == 'X':
-                self.im.set_ydata(self.X[:, xloc, yloc][::])
+                self.im.set_ydata(self.X.data[:, xloc, yloc][::])
             elif self.BoreView == 'Y':
-                self.im.set_ydata(self.X[xloc, :, yloc][::])
+                self.im.set_ydata(self.X.data[xloc, :, yloc][::])
             elif self.BoreView == 'Z':
-                self.im.set_ydata(self.X[yloc, xloc, :][::])
+                self.im.set_ydata(self.X.data[yloc, xloc, :][::])
 
         # try and redraw
         try:
@@ -102,21 +104,21 @@ class Main(QMainWindow, Ui_MainWindow):
         method = self.getNormDialog()
         if(method == 'Log'):
             self.Normx = colors.LogNorm(vmin=0.1,
-                                        vmax=self.X[self.ind, :, :].max())
+                                        vmax=self.X.data[self.ind, :, :].max())
             self.Normy = colors.LogNorm(vmin=0.1,
-                                        vmax=self.X[:, self.ind, :].max())
+                                        vmax=self.X.data[:, self.ind, :].max())
             self.Normz = colors.LogNorm(vmin=0.1,
-                                        vmax=self.X[:, :, self.ind].max())
+                                        vmax=self.X.data[:, :, self.ind].max())
         elif(method == 'Symmetric Log'):
             self.Normx = colors.SymLogNorm(linthresh=1.,
-                                           vmin=self.X[self.ind, :, :].min(),
-                                           vmax=self.X[self.ind, :, :].max())
+                                           vmin=self.X.data[self.ind, :, :].min(),
+                                           vmax=self.X.data[self.ind, :, :].max())
             self.Normy = colors.SymLogNorm(linthresh=1.,
-                                           vmin=self.X[:, self.ind, :].min(),
-                                           vmax=self.X[:, self.ind, :].max())
+                                           vmin=self.X.data[:, self.ind, :].min(),
+                                           vmax=self.X.data[:, self.ind, :].max())
             self.Normz = colors.SymLogNorm(linthresh=1.,
-                                           vmin=self.X[:, :, self.ind].max(),
-                                           vmax=self.X[:, :, self.ind].max())
+                                           vmin=self.X.data[:, :, self.ind].max(),
+                                           vmax=self.X.data[:, :, self.ind].max())
         elif(method == 'Linear'):
             self.Normx = None
             self.Normy = None
@@ -128,13 +130,13 @@ class Main(QMainWindow, Ui_MainWindow):
         # saves data and image of current view
         name = self.showGifDialog()
         if self.XView.isChecked():
-            np.savetxt(name + '.dat', self.X[self.Scroll_Vert.value(), :, :],
+            np.savetxt(name + '.dat', self.X.data[self.Scroll_Vert.value(), :, :],
                        delimiter=' ')
         elif self.YView.isChecked():
-            np.savetxt(name + '.dat', self.X[:, self.Scroll_Vert.value(), :],
+            np.savetxt(name + '.dat', self.X.data[:, self.Scroll_Vert.value(), :],
                        delimiter=' ')
         elif self.ZView.isChecked():
-            np.savetxt(name + '.dat', self.X[:, :, self.Scroll_Vert.value()],
+            np.savetxt(name + '.dat', self.X.data[:, :, self.Scroll_Vert.value()],
                        delimiter=' ')
 
         self.hres, self.vres = self.showextentDialog()
@@ -169,15 +171,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot(False)
         self.init_plot()
 
-    def is_perfect_cube(self, x):
-        # shitty cheat so i dont have to enter numbers... sometimes dosent work
-        x = abs(x)
-        p = x ** (1. / 3)
-        if int(round(p)) ** 3 == x:
-            return int(round(p))
-        else:
-            return 0
-
     def saveGif(self):
         rang = self.showGifframesDialog()  # get range of frames
         step = self.showGifstepDialog()    # get number of images
@@ -207,7 +200,7 @@ class Main(QMainWindow, Ui_MainWindow):
         # for 4d data cubes
         self.spinBoxval = int(self.spinBox.value())
         fd = open(self.name, 'rb')
-        self.readslice(fd, 200, 200, 200, np.float64, 4)
+        self.readslice(fd, self.ndim, np.float64, self.cubeorder)
         self.reset_plot()
         self.init_plot()
 
@@ -223,27 +216,31 @@ class Main(QMainWindow, Ui_MainWindow):
     def sliderval(self):
         # move slider and update data
         if self.XView.isChecked():
-            self.im.set_data(self.X[self.Scroll_Vert.value() - 1, :, :])
-            self.Scroll_Horz.setValue(0)  # pin unsed slider
+            # fd = open(self.name, 'rb')
+            self.X.readslice(self.Scroll_Horz.value())
+            self.im.set_data(self.X.data[self.Scroll_Vert.value(), :, :])
+            # self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.YView.isChecked():
-            self.im.set_data(self.X[:, self.Scroll_Vert.value() - 1, :])
-            self.Scroll_Horz.setValue(0)  # pin unsed slider
+            self.X.readslice(self.Scroll_Horz.value())
+            self.im.set_data(self.X.data[:, self.Scroll_Vert.value(), :])
+            # self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.ZView.isChecked():
-            self.im.set_data(self.X[:, :, self.Scroll_Vert.value() - 1])
-            self.Scroll_Horz.setValue(0)  # pin unsed slider
+            self.X.readslice(self.Scroll_Horz.value())
+            self.im.set_data(self.X.data[:, :, self.Scroll_Vert.value()])
+            # self.Scroll_Horz.setValue(0)  # pin unsed slider
         elif self.Bore.isChecked():
             if self.BoreView == 'X':
-                self.im.set_ydata(self.X[:, self.Scroll_Horz.value() - 1, self.Scroll_Vert.value() - 1][::])
+                self.im.set_ydata(self.X.data[:, self.Scroll_Horz.value(), self.Scroll_Vert.value()][::])
                 if self.auto_flag:
                     self.ax1.relim()
                     self.ax1.autoscale_view(True, True, True)
             elif self.BoreView == 'Y':
-                self.im.set_ydata(self.X[self.Scroll_Horz.value() - 1, :, self.Scroll_Vert.value() - 1][::])
+                self.im.set_ydata(self.X.data[self.Scroll_Horz.value(), :, self.Scroll_Vert.value()][::])
                 if self.auto_flag:
                     self.ax1.relim()
                     self.ax1.autoscale_view(True, True, True)
             elif self.BoreView == 'Z':
-                self.im.set_ydata(self.X[self.Scroll_Vert.value() - 1, self.Scroll_Horz.value() - 1, :][::])
+                self.im.set_ydata(self.X.data[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
                 if self.auto_flag:
                     self.ax1.relim()
                     self.ax1.autoscale_view(True, True, True)
@@ -306,37 +303,48 @@ class Main(QMainWindow, Ui_MainWindow):
             try:
                 # get file name
                 if args.file is None:
-                    self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+                    self.X.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
                 else:
-                    self.name = args.file
+                    self.X.name = args.file
 
                 # get precision of data cube
-                dt, dim, item = self.getPrec(args)
+                self.X.dtype, self.X.cubeorder, item = self.getPrec(args)
 
                 # get dimensions of data cube. can be guessed
-                ndim = self.getSize(args, item)
+                bool4d = False
+                if self.X.cubeorder == 4:
+                    bool4d = True
+                self.X.ndim = self.getSize(args, item, bool4d)
 
-                fd = open(self.name, 'rb')
+                try:
+                    fd = open(self.X.name, 'rb')
+                except FileNotFoundError:
+                    self.ErrorDialog("File not Found!")
+                    self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
 
-                self.readslice(fd, int(ndim[0]), int(
-                    ndim[1]), int(ndim[2]), dt, dim)
+                self.X.readslice(0)
                 self.init_plot()
                 break
-            except ValueError:
-                self.ErrorDialog("Value of Ndim incorrect for this data cube.")
+            # except ValueError:
+            #     self.ErrorDialog("Value of Ndim incorrect for this data cube.")
+            #     args.ndim = None
+            #     args.fpprec = None
+            except UnboundLocalError:
+                pass
+                break
 
-    def getSize(self, args, item):
+    def getSize(self, args, item, bool4d):
         if args.ndim is None and item:
-            size = os.path.getsize(self.name)
+            size = os.path.getsize(self.X.name)
             if "Real*8" in item:
                 size /= 8
             elif "Real*4" in item:
                 size /= 4
-            if self.is_perfect_cube(size) != 0:
-                size = self.is_perfect_cube(size)
+            if self.X.is_perfect_cube(size) != 0:
+                size = self.X.is_perfect_cube(size)
                 ndim = (size, size, size)
             else:
-                ndim = self.showNdimDialog()
+                ndim = self.showNdimDialog(bool4d)
         else:
             ndim = (args.ndim, args.ndim, args.ndim)
 
@@ -354,7 +362,6 @@ class Main(QMainWindow, Ui_MainWindow):
 
             if "4 dim" in item:
                 dim = 4
-                self.spinBox.show()
             elif "3 dim" in item:
                 dim = 3
         else:
@@ -377,8 +384,8 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "X View":
             if b.isChecked() is True:
                 self.reset_plot(False)
-                self.Scroll_Vert.setMaximum(self.rows)
-                self.im = self.ax1.matshow(self.X[self.ind, :, :],
+                self.Scroll_Vert.setMaximum(self.rows - 1)
+                self.im = self.ax1.matshow(self.X.data[self.ind, :, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
                                            norm=self.Normx)
@@ -390,8 +397,8 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Y View":
             if b.isChecked() is True:
                 self.reset_plot(False)
-                self.Scroll_Vert.setMaximum(self.cols)
-                self.im = self.ax1.matshow(self.X[:, self.ind, :],
+                self.Scroll_Vert.setMaximum(self.cols - 1)
+                self.im = self.ax1.matshow(self.X.data[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
                                            norm=self.Normy)
@@ -403,8 +410,8 @@ class Main(QMainWindow, Ui_MainWindow):
         if b.text() == "Z View":
             if b.isChecked() is True:
                 self.reset_plot(False)
-                self.Scroll_Vert.setMaximum(self.slices)
-                self.im = self.ax1.matshow(self.X[:, :, self.ind],
+                self.Scroll_Vert.setMaximum(self.slices - 1)
+                self.im = self.ax1.matshow(self.X.data[:, :, self.ind],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
                                            norm=self.Normz)
@@ -427,11 +434,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.ViewBore()
                 self.reset_plot(False)
                 if self.BoreView == 'X':
-                    self.im, = self.ax1.plot(self.X[:, self.ind, self.ind])
+                    self.im, = self.ax1.plot(self.X.data[:, self.ind, self.ind])
                 elif self.BoreView == 'Y':
-                    self.im, = self.ax1.plot(self.X[self.ind, :, self.ind])
+                    self.im, = self.ax1.plot(self.X.data[self.ind, :, self.ind])
                 elif self.BoreView == 'Z':
-                    self.im, = self.ax1.plot(self.X[self.ind, self.ind, :])
+                    self.im, = self.ax1.plot(self.X.data[self.ind, self.ind, :])
                 self.fig.set_tight_layout(True)
                 self.addmpl()
 
@@ -455,8 +462,8 @@ class Main(QMainWindow, Ui_MainWindow):
         self.reset_plot(False)
         if len(self.ave) == 0:
             self.ave = np.array([])
-            self.ave = np.sum(self.X, self.view)
-            self.ave /= (len(self.X[self.view[0]]) * len(self.X[self.view[1]]))
+            self.ave = np.sum(self.X.data, self.view)
+            self.ave /= (len(self.X.data[self.view[0]]) * len(self.X.data[self.view[1]]))
 
         self.im = self.ax1.plot(self.ave[::])
         self.fig.set_tight_layout(True)
@@ -477,16 +484,16 @@ class Main(QMainWindow, Ui_MainWindow):
 
         self.rmmpl()
 
-        self.rows, self.cols, self.slices = self.X.shape
+        self.rows, self.cols, self.slices, self.depth = self.X.ndim
         self.ind = 0  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
             self.Scroll_Vert.setMaximum(self.rows)
-            self.Scroll_Horz.setMaximum(self.rows)
+            self.Scroll_Horz.setMaximum(self.depth)
         elif self.YView.isChecked():
             view = self.YView
             self.Scroll_Vert.setMaximum(self.cols)
-            self.Scroll_Horz.setMaximum(self.cols)
+            self.Scroll_Horz.setMaximum(self.depth)
         elif self.ZView.isChecked():
             view = self.ZView
             self.Scroll_Vert.setMaximum(self.slices)
@@ -501,20 +508,6 @@ class Main(QMainWindow, Ui_MainWindow):
         self.btnstate(view)
         self.Scroll_Horz.setValue(self.ind)
         self.Scroll_Vert.setValue(self.ind)
-
-    def readslice(self, fd, dimx, dimy, dimz, dt, dim):
-        if dim == 4:
-            magic = 4
-            shape = (dimx, dimy, dimz, magic)
-        elif dim == 3:
-            shape = (dimx, dimy, dimz)
-        data = np.fromfile(file=fd, dtype=dt, sep="")
-        data = data.reshape(shape, order='F')
-        fd.close()
-        if dim == 4:
-            data = data[:, :, :, self.spinBoxval]
-        self.X = data[:, :, :]
-        del data
 
     def showGifframesDialog(self, ):
         text, ok = QtWidgets.QInputDialog.getInt(
@@ -541,7 +534,7 @@ class Main(QMainWindow, Ui_MainWindow):
                 text = True
             return text
 
-    def showNdimDialog(self, ):
+    def showNdimDialog(self, bool4d):
         text1, ok1 = QtWidgets.QInputDialog.getInt(
             self, 'Input Ndim', 'Enter X Ndim:')
         if ok1:
@@ -550,7 +543,11 @@ class Main(QMainWindow, Ui_MainWindow):
             if ok2:
                 text3, ok3 = QtWidgets.QInputDialog.getInt(
                     self, 'Input Ndim', 'Enter Z Ndim:')
-                if ok3:
+                if ok3 and bool4d:
+                    text4, ok4 = QtWidgets.QInputDialog.getInt(
+                        self, 'Input Ndim', 'Enter T Ndim:')
+                    return (text1, text2, text3, text4)
+                else:
                     return (text1, text2, text3)
 
     def showDtDialog(self, ):
