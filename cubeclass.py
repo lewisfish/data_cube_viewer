@@ -19,14 +19,15 @@ class datacube(object):
         self.data = data[:, :, :]
         del data
 
-    def is_perfect_cube(self, x):
+    def is_perfect_n(self, x, n):
         # shitty cheat so i dont have to enter numbers... sometimes dosent work
         x = abs(x)
-        p = x ** (1. / 3)
-        if int(round(p)) ** 3 == x:
+        p = x ** (1. / n)
+        if int(round(p)) ** n == x:
             return int(round(p))
         else:
             return 0
+
 
 if __name__ == '__main__':
     import numpy as np

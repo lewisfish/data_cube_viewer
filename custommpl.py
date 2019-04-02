@@ -320,15 +320,36 @@ class Main(QMainWindow, Ui_MainWindow):
                     fd = open(self.X.name, 'rb')
                 except FileNotFoundError:
                     self.ErrorDialog("File not Found!")
-                    self.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+                    self.X.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
 
                 self.X.readslice(0)
                 self.init_plot()
                 break
-            # except ValueError:
-            #     self.ErrorDialog("Value of Ndim incorrect for this data cube.")
-            #     args.ndim = None
-            #     args.fpprec = None
+            except ValueError:
+                size = os.path.getsize(self.X.name)
+                if "Real*8" in item:
+                    size /= 8
+                elif "Real*4" in item:
+                    size /= 4
+                two = True
+                three = True
+                if self.X.is_perfect_n(size, 2.) == 0:
+                    two = False
+                if self.X.is_perfect_n(size, 3.) == 0:
+                    three = False
+
+                mssg = "Value of Ndim or precision is incorrect for this data cube. On disk size is:{:010d}.".format(int(size))
+
+                if two and three:
+                    mssg += " Try x=y={:04d} or x=y=z={:04d}.".format(int(sqrt(size)), int(size**(1. / 3.)))
+                elif two:
+                    mssg += "Try x=y={:04d}.".format(int(np.sqrt(size)))
+                elif three:
+                    mssg += "Try x=y=z={:04d}.".format(int(size**(1. / 3.)))
+                self.ErrorDialog(mssg)
+
+                args.ndim = None
+                args.fpprec = None
             except UnboundLocalError:
                 pass
                 break
@@ -340,8 +361,8 @@ class Main(QMainWindow, Ui_MainWindow):
                 size /= 8
             elif "Real*4" in item:
                 size /= 4
-            if self.X.is_perfect_cube(size) != 0:
-                size = self.X.is_perfect_cube(size)
+            if self.X.is_perfect_n(size, 3.) != 0:
+                size = self.X.is_perfect_n(size, 3.)
                 ndim = (size, size, size)
             else:
                 ndim = self.showNdimDialog(bool4d)
@@ -484,7 +505,11 @@ class Main(QMainWindow, Ui_MainWindow):
 
         self.rmmpl()
 
-        self.rows, self.cols, self.slices, self.depth = self.X.ndim
+        if self.X.cubeorder == 4:
+            self.rows, self.cols, self.slices, self.depth = self.X.ndim
+        else:
+            self.rows, self.cols, self.slices = self.X.ndim
+            self.depth = 0
         self.ind = 0  # int(rows / 2)
         if self.XView.isChecked():
             view = self.XView
