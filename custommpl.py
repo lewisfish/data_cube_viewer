@@ -331,21 +331,18 @@ class Main(QMainWindow, Ui_MainWindow):
                     size /= 8
                 elif "Real*4" in item:
                     size /= 4
-                two = True
-                three = True
-                if self.X.is_perfect_n(size, 2.) == 0:
-                    two = False
-                if self.X.is_perfect_n(size, 3.) == 0:
-                    three = False
 
-                mssg = "Value of Ndim or precision is incorrect for this data cube. On disk size is:{:010d}.".format(int(size))
+                mssg = "Value of Ndim or precision is incorrect for this data cube.\n On disk size is: {:010d}.\n".format(int(size))
 
-                if two and three:
-                    mssg += " Try x=y={:04d} or x=y=z={:04d}.".format(int(sqrt(size)), int(size**(1. / 3.)))
-                elif two:
-                    mssg += "Try x=y={:04d}.".format(int(np.sqrt(size)))
-                elif three:
-                    mssg += "Try x=y=z={:04d}.".format(int(size**(1. / 3.)))
+                val2 = self.X.is_perfect_n(size, 2.)
+                val3 = self.X.is_perfect_n(size, 3.)
+
+                if (val2 and val3) != 0:
+                    mssg += " Try x=y={:04d}, z=1\n or x=y=z={:04d}.".format(int(val2), int(val3))
+                elif val2 != 0:
+                    mssg += "Try x=y={:04d}, z=1.".format(int(val2))
+                elif val3 != 0:
+                    mssg += "Try x=y=z={:04d}.".format(int(val3))
                 self.ErrorDialog(mssg)
 
                 args.ndim = None
