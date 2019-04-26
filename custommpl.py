@@ -643,12 +643,12 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def showclipColourBarDialog(self, ):
         text1, ok1 = QtWidgets.QInputDialog.getDouble(
-            self, 'Input cbar min', 'Enter min:')
+            self, 'Input cbar min', 'Enter min:', 0., np.finfo("d").min, np.finfo("d").max, 10)
         if ok1:
             text2, ok2 = QtWidgets.QInputDialog.getDouble(
-                self, 'Input cbar max', 'Enter max:')
+                self, 'Input cbar max', 'Enter max:', 0., np.finfo("d").min, np.finfo("d").max, 10)
             if ok2:
-                return (int(text1), int(text2))
+                return (float(text1), float(text2))
 
     def ErrorDialog(self, ErrMsg):
         QtWidgets.QMessageBox.warning(self, "Error", ErrMsg)
