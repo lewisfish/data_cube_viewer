@@ -358,11 +358,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 size /= 8
             elif "Real*4" in item:
                 size /= 4
-            if self.X.is_perfect_n(size, 3.) != 0:
-                size = self.X.is_perfect_n(size, 3.)
-                ndim = (size, size, size)
-            else:
-                ndim = self.showNdimDialog(bool4d)
+            # if self.X.is_perfect_n(size, 3.) != 0:
+            #     size = self.X.is_perfect_n(size, 3.)
+            #     ndim = (size, size, size)
+            # else:
+            ndim = self.showNdimDialog(bool4d)
         else:
             ndim = (args.ndim, args.ndim, args.ndim)
 
@@ -403,6 +403,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.Scroll_Vert.setMaximum(self.rows - 1)
+                self.Scroll_Horz.setMaximum(self.depth - 1)
                 self.im = self.ax1.matshow(self.X.data[self.ind, :, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
@@ -416,6 +417,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.Scroll_Vert.setMaximum(self.cols - 1)
+                self.Scroll_Horz.setMaximum(self.depth - 1)
                 self.im = self.ax1.matshow(self.X.data[:, self.ind, :],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,
@@ -429,6 +431,7 @@ class Main(QMainWindow, Ui_MainWindow):
             if b.isChecked() is True:
                 self.reset_plot(False)
                 self.Scroll_Vert.setMaximum(self.slices - 1)
+                self.Scroll_Horz.setMaximum(self.depth - 1)
                 self.im = self.ax1.matshow(self.X.data[:, :, self.ind],
                                            vmin=self.cmapmin, vmax=self.cmapmax,
                                            cmap=str(self.colourmap), interpolation=self.interpMethod,

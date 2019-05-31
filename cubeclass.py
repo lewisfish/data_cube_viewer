@@ -15,7 +15,7 @@ class datacube(object):
         data = np.fromfile(file=self.name, dtype=self.dtype, sep="")
         data = data.reshape(self.ndim, order='F')
         if self.cubeorder == 4:
-            data = data[:, :, :, max(args[0] - 1, 0)]
+            data = data[:, :, :, max(args[0], 0)]
         self.data = data[:, :, :]
         del data
 

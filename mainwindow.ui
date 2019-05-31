@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>../Pictures/callum.png</normaloff>../Pictures/callum.png</iconset>
+    <normaloff>../Pictures/Screenshot.png</normaloff>../Pictures/Screenshot.png</iconset>
   </property>
   <property name="autoFillBackground">
    <bool>false</bool>
