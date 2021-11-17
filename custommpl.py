@@ -4,7 +4,7 @@ from PyQt5.uic import loadUiType
 import gc
 import os
 
-from cubeclass import datacube
+from cubeclass import datacube, read_nrrd
 
 from matplotlib.figure import Figure
 import matplotlib.ticker as ticker
@@ -240,7 +240,7 @@ class Main(QMainWindow, Ui_MainWindow):
                     self.ax1.relim()
                     self.ax1.autoscale_view(True, True, True)
             elif self.BoreView == 'Z':
-                self.im.set_ydata(self.X.data[self.Scroll_Vert.value(), self.Scroll_Horz.value(), :][::])
+                self.im.set_ydata(self.X.data[self.Scroll_Vert.value(), 100, :][::])
                 if self.auto_flag:
                     self.ax1.relim()
                     self.ax1.autoscale_view(True, True, True)
@@ -307,24 +307,34 @@ class Main(QMainWindow, Ui_MainWindow):
                 else:
                     self.X.name = args.file
 
-                # get precision of data cube
-                self.X.dtype, self.X.cubeorder, item = self.getPrec(args)
+                if ".nrrd" in self.X.name:
+                    _, hdr = read_nrrd(self.X.name)
+                    self.X.dtype = hdr["type"]
+                    self.X.cubeorder = hdr["dimension"]
+                    self.X.ndim = tuple(hdr["sizes"])
+                    self.X.readslice(0)
+                    self.init_plot()
+                    break
 
-                # get dimensions of data cube. can be guessed
-                bool4d = False
-                if self.X.cubeorder == 4:
-                    bool4d = True
-                self.X.ndim = self.getSize(args, item, bool4d)
+                else:
+                    # get precision of data cube
+                    self.X.dtype, self.X.cubeorder, item = self.getPrec(args)
 
-                try:
-                    fd = open(self.X.name, 'rb')
-                except FileNotFoundError:
-                    self.ErrorDialog("File not Found!")
-                    self.X.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+                    # get dimensions of data cube. can be guessed
+                    bool4d = False
+                    if self.X.cubeorder == 4:
+                        bool4d = True
+                    self.X.ndim = self.getSize(args, item, bool4d)
 
-                self.X.readslice(0)
-                self.init_plot()
-                break
+                    try:
+                        fd = open(self.X.name, 'rb')
+                    except FileNotFoundError:
+                        self.ErrorDialog("File not Found!")
+                        self.X.name = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File')[0]
+
+                    self.X.readslice(0)
+                    self.init_plot()
+                    break
             except ValueError:
                 size = os.path.getsize(self.X.name)
                 if "Real*8" in item:
