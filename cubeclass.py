@@ -106,22 +106,6 @@ def read_data(file, header):
     return data
 
 
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt  # type: ignore[import]
-
-    file = "jmean-test-new-io.nrrd"
-    data, _ = read(file)
-    fig, axs = plt.subplots(1, 2)
-    axs[0].imshow(data[:, :, 50])
-    data = np.fromfile("jmean-test-new-io.dat", sep="", dtype=np.float64)
-    data = data.reshape((200, 200, 200))
-    axs[1].imshow(data[:, :, 50])
-    plt.show()
-
-
-
-
 if __name__ == '__main__':
     import numpy as np
     import os
