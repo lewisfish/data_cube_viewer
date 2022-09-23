@@ -69,7 +69,7 @@ def read_header(file):
         elif line == "":
             break
 
-        key, value = re.split(r":=?", line, 1)  # type: ignore[type-var]
+        key, value = re.split(r"[:=]", line, 1)  # type: ignore[type-var]
         key, value = key.strip(), value.strip()  # type: ignore[attr-defined]
 
         value = _get_value_type(key, value)
